@@ -8,6 +8,7 @@ import datetime
 import requests.packages.urllib3 # type: ignore
 requests.packages.urllib3.disable_warnings()
 
+
 # Validate Connection & Output Info
 def establish_session():
     print("\nFlashArray {} (version {}) REST session established!\n".format(array_info['array_name'], array_info['version']))
@@ -16,17 +17,15 @@ def establish_session():
 # Get Replica Link Status
 # Return Formatted HTML code
 def get_replicaStatus():
+
     heading = "Replica Link Status"
 
     replicas = array.list_pod_replica_links()
 
-    print("\n\n", heading, "\n")
-    for r in range(len(replicas)):
-        print(replicas[r], "\n")
+    """for r in range(len(replicas)):
+        print(replicas[r], "\n")"""
 
     replicasDF = pd.DataFrame(replicas)
-
-    print(replicasDF)
 
     # Specify the new column order
     new_order = ['local_pod_name', 'direction', 'remote_names', 'remote_pod_name', 'status', 'recovery_point', 'lag']
@@ -40,7 +39,7 @@ def get_replicaStatus():
     # Format DataFrame
     replicasOutputDF = update_dataframe(replicasOutputDF)
 
-    print(replicasOutputDF)
+    make_html(replicasOutputDF, heading)
 
     return(replicasOutputDF, heading)
 
@@ -49,9 +48,8 @@ def list_arrayConnections():
 
     connections = array.list_array_connections()
 
-    print("\n\n", heading, "\n")
-    for r in range(len(connections)):
-        print(connections[r], "\n")
+    """for r in range(len(connections)):
+        print(connections[r], "\n")"""
 
     connectionsDF = pd.DataFrame(connections)
 
@@ -67,7 +65,7 @@ def list_arrayConnections():
     # Format DataFrame
     connectionsOutputDF = update_dataframe(connectionsOutputDF)
 
-    print(connectionsOutputDF)
+    make_html(connectionsOutputDF, heading)
 
     return(connectionsOutputDF, heading)
 
@@ -105,6 +103,63 @@ def update_dataframe(input):
 
     return(df)
 
+    
+
+# Convert DataFrame to HTML
+def make_html(dataframe, heading):
+    dataFrameHTML = dataframe.to_html(index=False)
+
+    headingHTML = "<h2>" + heading + "</h2>\n\n"
+    
+    htmlOutput, heading = format_table(dataFrameHTML, headingHTML)
+
+    write_html(htmlOutput, heading)
+
+    return(htmlOutput, heading)
+
+# Format any HTML table
+def format_table(htmlInput, heading):
+
+    headingHTML = heading.replace('<h2>',
+                                    '\n<h2 style="color: white; width: 100%; font-family: Arial, sans-serif; font-size: 1.25em;">')
+
+    html = htmlInput.replace('<table border="1" class="dataframe">',
+                                '<table style="border-collapse: collapse; width: 100%; font-family: Arial, sans-serif;">')
+    html = html.replace('<thead>',
+                            '<thead style="color: white; border-bottom: 5px solid #FE5000;">')
+    html = html.replace('<th>',
+                            '<th style="color:white; border-bottom: 1px solid #FE5000; text-align: left; padding: 8px;">')
+    html = html.replace('<td>',
+                            '<td style="color:white; border-bottom: 1px solid #DADADA; text-align: left; padding: 8px;">')
+    #html = html.replace('<tr>',
+    #                        '<tr style="background-color: #6C6C6C;">')
+    html = html.replace('<tr>',
+                            '<tr style="color:white; background-color: #1C1C1C;">')
+    html = html.replace('</table>',
+                            '</table>\n')
+
+    #print(htmlInput)
+    return(html, headingHTML)
+
+# Write output to HTML file
+## Create the file
+def start_html_body():
+    with open('test_output.html', 'w') as f:
+        f.write("<body style=\"background-color: #1C1C1C; padding-top: 2vh; padding-left: 7vw; padding-right: 8vw;\">\n")
+        f.write("<img src='assets/pstg_logo_darkMode.svg' width=250 /><br /><br />")
+
+## Add tables to HTML
+def write_html(html, title):
+    with open('test_output.html', 'a') as f:
+        f.writelines(title)
+        f.writelines(html)
+        f.writelines('</br></br>')
+
+## Close the file with ending body tag
+def end_html_body():
+    with open('test_output.html', 'a') as f:
+        f.writelines("\n</body>")
+
 ################
 # Run Program  #
 ################
@@ -115,6 +170,13 @@ array_info = array.get()
 
 establish_session()
 
+# Initialize HTML file
+start_html_body()
+
 # Compile Data
 list_arrayConnections() # Array Connections
 get_replicaStatus()     # Replica Link Status (ActiveCluster)
+
+
+# Complete the HTML file
+end_html_body()
