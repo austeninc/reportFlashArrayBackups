@@ -66,6 +66,15 @@ def list_arrayConnections():
 def update_dataframe(input):
 
     df = input
+    
+    # Convert Timestamps to Human Readable
+    if 'recovery_point' in df:
+        df['recovery_point'] = pd.to_datetime(df['recovery_point'], unit='ms', utc=True)    # Assume UTC source
+        df['recovery_point'] = df['recovery_point'].dt.tz_convert('America/Los_Angeles')    # Assume convert to Pacific time
+        df['recovery_point'] = df['recovery_point'].dt.strftime('%Y-%m-%d %H:%M:%S %Z')     # Make human readable
+
+    # Convert Lag Time ms to seconds
+
 
     # Replace Column Titles with Human-Readable (Dictionary)
     df.rename(columns={'version': 'Version',
@@ -89,12 +98,6 @@ def update_dataframe(input):
                     'outbound': '\N{RIGHTWARDS ARROW}',
                     'inbound': '\N{LEFTWARDS ARROW}'
                     })
-    
-    # Convert Timestamps to Human Readable
-    if 'Recovery Point' in df:
-        df['Recovery Point'] = pd.to_datetime(df['Recovery Point'], unit='ms', utc=True)    # Assume UTC source
-        df['Recovery Point'] = df['Recovery Point'].dt.tz_convert('America/Los_Angeles')    # Assume convert to Pacific time
-        df['Recovery Point'] = df['Recovery Point'].dt.strftime('%Y-%m-%d %H:%M:%S %Z')     # Make human readable
 
     return(df)
 
