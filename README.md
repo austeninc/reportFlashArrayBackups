@@ -11,3 +11,7 @@ Use the Pure Storage REST API via the Python client to collect information on ba
 * Convert pandas dataframe to HTML table
 ** Add in-line CSS styling
 * Output HTML to file
+
+### Pending Development:
+* Add support for multiple arrays
+* Add support to email output
