@@ -22,9 +22,6 @@ def get_replicaStatus():
 
     replicas = array.list_pod_replica_links()
 
-    """for r in range(len(replicas)):
-        print(replicas[r], "\n")"""
-
     replicasDF = pd.DataFrame(replicas)
 
     # Specify the new column order
@@ -47,9 +44,6 @@ def list_arrayConnections():
     heading = "Array Connections"
 
     connections = array.list_array_connections()
-
-    """for r in range(len(connections)):
-        print(connections[r], "\n")"""
 
     connectionsDF = pd.DataFrame(connections)
 
@@ -98,8 +92,9 @@ def update_dataframe(input):
     
     # Convert Timestamps to Human Readable
     if 'Recovery Point' in df:
-        df['Recovery Point'] = pd.to_datetime(df['Recovery Point'], origin='unix', unit='ms').dt.tz_localize('UTC').dt.tz_convert('America/Los_Angeles')
-    #df['Recovery Point'] = pd.to_datetime(df['Recovery Point'], format='%d%M%Y')
+        df['Recovery Point'] = pd.to_datetime(df['Recovery Point'], unit='ms', utc=True)    # Assume UTC source
+        df['Recovery Point'] = df['Recovery Point'].dt.tz_convert('America/Los_Angeles')    # Assume convert to Pacific time
+        df['Recovery Point'] = df['Recovery Point'].dt.strftime('%Y-%m-%d %H:%M:%S %Z')     # Make human readable
 
     return(df)
 

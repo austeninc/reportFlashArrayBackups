@@ -3,7 +3,7 @@ from purestorage import FlashArray
 
 import pandas as pd
 
-import datetime
+from datetime import datetime
 
 import requests.packages.urllib3 # type: ignore
 requests.packages.urllib3.disable_warnings()
@@ -13,8 +13,50 @@ def establish_session():
     print("\nFlashArray {} (version {}) REST session established!\n".format(array_info['array_name'], array_info['version']))
     print(array_info, "\n")
 
+# List Array Connections
+def list_arrayConnections():
+    heading = "Array Connections"
+
+    connections = array.list_array_connections()
+
+    print("\n\n", heading, "\n")
+    for r in range(len(connections)):
+        print(connections[r], "\n")
+
+    connectionsDF = pd.DataFrame(connections)
+
+    # Specify the new column order
+    new_order = ['array_name', 'version', 'type', 'status', 'throttled', 'management_address', 'replication_address', 'id']
+
+    # Reorder the DataFrame columns
+    connectionsOutputDF = connectionsDF[new_order]
+
+    # Sort by Direction
+    connectionsOutputDF = connectionsOutputDF.sort_values(by=['status', 'array_name'], ascending=False)
+
+    # Format DataFrame
+    connectionsOutputDF = update_dataframe(connectionsOutputDF)
+
+    print(connectionsOutputDF)
+
+    return(connectionsOutputDF, heading)
+
+# List All Pods
+def list_pods():
+    heading = "Pods"
+
+    pods = array.list_pods()
+
+    print("\n\n", heading, "\n")
+    for r in range(len(pods)):
+        print(pods[r], "\n")
+
+    podsDF = pd.DataFrame(pods)
+
+    print(podsDF)
+
+
 # Get Replica Link Status
-# Return Formatted HTML code
 def get_replicaStatus():
     heading = "Replica Link Status"
 
@@ -43,33 +85,6 @@ def get_replicaStatus():
     print(replicasOutputDF)
 
     return(replicasOutputDF, heading)
-
-def list_arrayConnections():
-    heading = "Array Connections"
-
-    connections = array.list_array_connections()
-
-    print("\n\n", heading, "\n")
-    for r in range(len(connections)):
-        print(connections[r], "\n")
-
-    connectionsDF = pd.DataFrame(connections)
-
-    # Specify the new column order
-    new_order = ['array_name', 'version', 'type', 'status', 'throttled', 'management_address', 'replication_address', 'id']
-
-    # Reorder the DataFrame columns
-    connectionsOutputDF = connectionsDF[new_order]
-
-    # Sort by Direction
-    connectionsOutputDF = connectionsOutputDF.sort_values(by=['status', 'array_name'], ascending=False)
-
-    # Format DataFrame
-    connectionsOutputDF = update_dataframe(connectionsOutputDF)
-
-    print(connectionsOutputDF)
-
-    return(connectionsOutputDF, heading)
 
 def update_dataframe(input):
 
@@ -100,8 +115,9 @@ def update_dataframe(input):
     
     # Convert Timestamps to Human Readable
     if 'Recovery Point' in df:
-        df['Recovery Point'] = pd.to_datetime(df['Recovery Point'], origin='unix', unit='ms').dt.tz_localize('UTC').dt.tz_convert('America/Los_Angeles')
-    #df['Recovery Point'] = pd.to_datetime(df['Recovery Point'], format='%d%M%Y')
+        df['Recovery Point'] = pd.to_datetime(df['Recovery Point'], unit='ms', utc=True)    # Assume UTC source
+        df['Recovery Point'] = df['Recovery Point'].dt.tz_convert('America/Los_Angeles')    # Assume convert to Pacific time
+        df['Recovery Point'] = df['Recovery Point'].dt.strftime('%Y-%m-%d %H:%M:%S %Z')     # Make human readable
 
     return(df)
 
@@ -118,3 +134,4 @@ establish_session()
 # Compile Data
 list_arrayConnections() # Array Connections
 get_replicaStatus()     # Replica Link Status (ActiveCluster)
+list_pods()             # List Pods
