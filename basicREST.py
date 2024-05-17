@@ -61,14 +61,13 @@ def list_alerts(filtering=None):
     # Rename ambiguous columns
     allAlertsDF.rename(columns={'id': 'alert_id', 'code': 'alert_code', 'details': 'alert_details'}, inplace=True)
 
-    print(allAlertsDF)
-
     if filtering is None:
         heading = "All Open Alerts"
 
         # Format DataFrame
         allAlertsOutputDF = update_dataframe(allAlertsDF)
         
+        print("\n", heading, "\n")
         print(allAlertsOutputDF)
 
         return(heading, allAlertsOutputDF)
@@ -87,6 +86,7 @@ def list_alertsReplication(allAlertsDF):
 
     replAlertsOutputDF = update_dataframe(replicationAlertsDF)
 
+    print("\n", heading, "\n")
     print(replAlertsOutputDF)
 
     return(heading, replAlertsOutputDF)
@@ -246,7 +246,14 @@ def update_dataframe(input):
                      'pod_name': 'Pod',
                      'pod_source': 'Source',
                      'pod_promotion_status': 'Promotion Status',
-                     'mediator_status': 'Mediator Status'
+                     'mediator_status': 'Mediator Status',
+                     'alert_id': 'Alert ID',
+                     'current_severity': 'Severity',
+                     'opened': 'Opened',
+                     'alert_code': 'Alert Code',
+                     'component_type': 'Component',
+                     'event': 'Event',
+                     'alert_details': 'Details'
                     }, inplace=True)
     
     # Replace 'Engineer' with 'Software Engineer' in the 'Occupation' column

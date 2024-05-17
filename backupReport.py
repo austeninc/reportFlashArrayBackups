@@ -157,7 +157,14 @@ def update_dataframe(input):
                      'pod_name': 'Pod',
                      'pod_source': 'Source',
                      'pod_promotion_status': 'Promotion Status',
-                     'mediator_status': 'Mediator Status'
+                     'mediator_status': 'Mediator Status',
+                     'alert_id': 'Alert ID',
+                     'current_severity': 'Severity',
+                     'opened': 'Opened',
+                     'alert_code': 'Alert Code',
+                     'component_type': 'Component',
+                     'event': 'Event',
+                     'alert_details': 'Details'
                     }, inplace=True)
     
     # Replace 'Engineer' with 'Software Engineer' in the 'Occupation' column
