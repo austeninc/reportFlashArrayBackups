@@ -219,7 +219,7 @@ def update_dataframe(input):
     df = input
     df = df.copy()
 
-    # Convert Timestamps to Human Readable
+    # Convert UNIX Timestamps to Human Readable
     if 'recovery_point' in df:
         df['recovery_point'] = pd.to_datetime(df['recovery_point'], unit='ms', utc=True)    # Assume UTC source
         df['recovery_point'] = df['recovery_point'].dt.tz_convert('America/Los_Angeles')    # Assume convert to Pacific time
@@ -227,6 +227,11 @@ def update_dataframe(input):
 
     # Convert Lag Time ms to seconds
 
+    # Convert Alert opened Timestamps to standard format
+    if 'opened' in df:
+        df['opened'] = pd.to_datetime(df['opened'], format='%Y-%m-%dT%H:%M:%SZ') #.dt.tz_localize('UTC')
+        #df['opened'] = df['opened'].dt.tz_convert('America/Los_Angeles')
+        df['opened'] = df['opened'].dt.strftime('%Y-%m-%d %H:%M:%S %Z')
 
     # Replace Column Titles with Human-Readable (Dictionary)
     df.rename(columns={'version': 'Version',
