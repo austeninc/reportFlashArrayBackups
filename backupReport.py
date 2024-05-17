@@ -63,7 +63,7 @@ def list_alerts(filtering=None):
 
     # Handling Output
     if filtering is None:                       # Default: Provide no output and return unfiltered dataframe
-        print("No request for All Alerts Output. Returning unformatted table of all alerts.\n\n")
+        #print("No request for All Alerts Output. Returning unformatted table of all alerts.\n\n")
         return(allAlertsDF)
     
     else:                                       # If argument is provided [e.g. list_alerts(True)], then provide output for All Alerts and do nothing else
@@ -71,9 +71,12 @@ def list_alerts(filtering=None):
 
         # Format DataFrame
         allAlertsOutputDF = update_dataframe(allAlertsDF)
+
+        # Make HTML
+        make_html(heading, allAlertsOutputDF)
         
-        print("\n", heading, "\n")
-        print(allAlertsOutputDF)
+        #print("\n", heading, "\n")
+        #print(allAlertsOutputDF)
 
         return(heading, allAlertsOutputDF)      # Consider returning unfiltered table, too, just in case (this is not implemented)
         
@@ -134,9 +137,9 @@ def list_arrayConnections():
     # Format DataFrame
     connectionsOutputDF = update_dataframe(connectionsOutputDF)
 
-    make_html(connectionsOutputDF, heading)
+    make_html(heading, connectionsOutputDF)
 
-    return(connectionsOutputDF, heading)
+    return(heading, connectionsOutputDF)
 #------ End Array Connections -----#
 
 #----- ActiveDR (async) Status ----#
@@ -162,9 +165,9 @@ def get_replicaStatus():
     # Format DataFrame
     replicasOutputDF = update_dataframe(replicasOutputDF)
 
-    make_html(replicasOutputDF, heading)
+    make_html(heading, replicasOutputDF)
 
-    return(replicasOutputDF, heading)
+    return(heading, replicasOutputDF)
 #------ End ActiveDR  Status ------#
 
 #--- ActiveCluster (sync) Status --#
@@ -218,9 +221,9 @@ def list_pods():
     # Prep for HTML
     podsOutputDF = update_dataframe(podsFilteredDF)
 
-    make_html(podsOutputDF, heading)
+    make_html(heading, podsOutputDF)
 
-    return(podsOutputDF, heading)
+    return(heading, podsOutputDF)
 #---- End ActiveCluster Status ----#
 
 #-------------------------------------------#
@@ -298,19 +301,19 @@ def update_dataframe(input):
 #            Prepare HTML Output            #
 #-------------------------------------------#
 # Convert DataFrame to HTML
-def make_html(dataframe, heading):
+def make_html(heading, dataframe):
     dataFrameHTML = dataframe.to_html(index=False)
 
     headingHTML = "<h2>" + heading + "</h2>\n\n"
     
-    htmlOutput, heading = format_table(dataFrameHTML, headingHTML)
+    heading, htmlOutput = format_table(headingHTML, dataFrameHTML)
 
-    write_html(htmlOutput, heading)
+    write_html(heading, htmlOutput)
 
-    return(htmlOutput, heading)
+    return(heading, htmlOutput)
 
 # Format any HTML table
-def format_table(htmlInput, heading):
+def format_table(heading, htmlInput):
 
     headingHTML = heading.replace('<h2>',
                                     '\n<h2 style="color: white; width: 100%; font-family: Arial, sans-serif; font-size: 1.25em;">')
@@ -331,7 +334,7 @@ def format_table(htmlInput, heading):
                             '</table>\n')
 
     #print(htmlInput)
-    return(html, headingHTML)
+    return(headingHTML, html)
 #-------------------------------------------#
 #        Done Preparing HTML Output         #
 #-------------------------------------------#
@@ -347,7 +350,7 @@ def start_html_body():
         f.write("<img src='assets/pstg_logo_darkMode.svg' width=250 /><br /><br />")
 
 ## Add tables to HTML
-def write_html(html, title):
+def write_html(title, html):
     with open('test_output.html', 'a') as f:
         f.writelines(title)
         f.writelines(html)
