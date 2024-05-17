@@ -35,7 +35,7 @@ def list_arrayConnections():
     connectionsOutputDF = connectionsOutputDF.sort_values(by=['status', 'array_name'], ascending=False)
 
     # Rename 'array_name' to clearly be Remote
-    connectionsOutputDF = connectionsOutputDF.rename(columns={'array_name': 'remote_name'})
+    connectionsOutputDF = connectionsOutputDF.rename(columns={'array_name': 'remote_names'})
 
     # Format DataFrame
     connectionsOutputDF = update_dataframe(connectionsOutputDF)
@@ -103,7 +103,7 @@ def get_replicaStatus():
 
     replicas = array.list_pod_replica_links()
 
-    print("\n\n", heading, "\n")
+    print("\n\n",heading,"\n")
     for r in range(len(replicas)):
         print(replicas[r], "\n")
 

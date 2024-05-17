@@ -56,12 +56,70 @@ def list_arrayConnections():
     # Sort by Direction
     connectionsOutputDF = connectionsOutputDF.sort_values(by=['status', 'array_name'], ascending=False)
 
+    # Rename 'array_name' to clearly be Remote
+    connectionsOutputDF = connectionsOutputDF.rename(columns={'array_name': 'remote_names'})
+
     # Format DataFrame
     connectionsOutputDF = update_dataframe(connectionsOutputDF)
 
     make_html(connectionsOutputDF, heading)
 
     return(connectionsOutputDF, heading)
+
+# List All Pods
+def list_pods():
+    heading = "Pods"
+
+    pods = array.list_pods()
+
+    podsDF = pd.DataFrame(pods)
+
+    ####### Clean Up Output #########
+    # Filter out non-replicating pods
+    podsFilteredDF = podsDF[podsDF['arrays'].apply(len) > 1]
+
+    # Drop unwanted columns from Pods table
+    podsFilteredDF = podsFilteredDF.drop(columns=['link_source_count', 'link_target_count', 'requested_promotion_state'])
+
+    # Re-Order the Columns
+    new_order = ['name', 'source', 'promotion_status', 'arrays']
+    podsFilteredDF = podsFilteredDF[new_order]
+
+    # Explode the 'arrays' column
+    podsArrays = podsFilteredDF.explode('arrays').reset_index(drop=True)
+
+    # Normalize the exploded 'arrays' column
+    podsNormalizedArrays = pd.json_normalize(podsArrays['arrays'])
+
+    # Drop unwanted columns from normalized arrays
+    podsNormalizedArrays = podsNormalizedArrays.drop(columns=['pre_elected', 'frozen_at', 'progress', 'array_id'])
+
+    # Clean up column names to clearly state "array_name"
+    podsNormalizedArrays = podsNormalizedArrays.rename(columns={'name': 'array_name'})
+
+    # Add a 'pod_' prefix to column names for clarity
+    podsArrays = podsArrays.add_prefix('pod_')
+
+    # Repeat the rows in the original DataFrame to match the length of the exploded arrays
+    podsDuplicatedDF = podsArrays.drop(columns=['pod_arrays']).reset_index(drop=True)
+
+    # Concatenate the repeated rows with the normalized arrays
+    podsFilteredDF = pd.concat([podsDuplicatedDF, podsNormalizedArrays], axis=1)
+
+    # Replace duplicate data with empty strings
+    cols_to_check = ['pod_name', 'pod_source', 'pod_promotion_status']
+    podsFilteredDF.loc[:, cols_to_check] = podsFilteredDF.loc[:, cols_to_check].mask(podsFilteredDF.loc[:, cols_to_check].duplicated(), '')
+    ###### Clean Up Complete ########
+
+
+    # Prep for HTML
+    podsOutputDF = update_dataframe(podsFilteredDF)
+
+    make_html(podsOutputDF, heading)
+
+    return(podsOutputDF, heading)
+
+
 
 def update_dataframe(input):
 
@@ -82,7 +140,7 @@ def update_dataframe(input):
                      'status': 'Status',
                      'management_address': 'Management IP',
                      'id': 'Array ID',
-                     'array_name': 'Remote Array',
+                     'array_name': 'Array',
                      'replication_address': 'Replication IP',
                      'type': 'Replication Type',
                      'local_pod_name': 'Local Pod',
@@ -90,7 +148,11 @@ def update_dataframe(input):
                      'remote_pod_name': 'Remote Pod',
                      'recovery_point': 'Recovery Point',
                      'direction': 'Direction',
-                     'lag': 'Lag'
+                     'lag': 'Lag',
+                     'pod_name': 'Pod',
+                     'pod_source': 'Source',
+                     'pod_promotion_status': 'Promotion Status',
+                     'mediator_status': 'Mediator Status'
                     }, inplace=True)
     
     # Replace 'Engineer' with 'Software Engineer' in the 'Occupation' column
@@ -173,8 +235,13 @@ start_html_body()
 
 # Compile Data
 list_arrayConnections() # Array Connections
-get_replicaStatus()     # Replica Link Status (ActiveCluster)
+get_replicaStatus()     # Replica Link Status (ActiveDR)
+list_pods()             # List replicating pods (ActiveCluster)
 
 
 # Complete the HTML file
 end_html_body()
+
+
+
+##### If Mediator is unhealthy: https://support.purestorage.com/bundle/m_activecluster/page/FlashArray/PurityFA/Replication/ActiveCluster/Troubleshooting/topics/concept/c_impact_312.html
