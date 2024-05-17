@@ -128,6 +128,7 @@ def list_pods():
 def update_dataframe(input):
 
     df = input
+    df = df.copy()
     
     # Convert Timestamps to Human Readable
     if 'recovery_point' in df:

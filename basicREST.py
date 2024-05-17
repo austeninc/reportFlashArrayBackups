@@ -8,10 +8,90 @@ from datetime import datetime
 import requests.packages.urllib3 # type: ignore
 requests.packages.urllib3.disable_warnings()
 
+#-------------------------------------------#
+#              Global Variables             #
+#-------------------------------------------#
+# Alert Codes Specific to Replication Function
+replication_alert_codes = [50, 52, 55, 119, 120, 121, 123, 142, 143, 145, 152, 233, 13, 46, 51, 76, 77, 78, 122, 140, 151, 154, 157, 177, 226, 182, 192]
+
+# Define the custom order for 'current_severity'
+#-- This is reversed to allow for reverse sorting by date in later functions
+severity_order = ['info', 'warning', 'critical']
+
+#-------------------------------------------#
+#            End Global Variables           #
+#-------------------------------------------#
+
+
+#-------------------------------------------#
+#           Establish REST Session          #
+#-------------------------------------------#
 # Validate Connection & Output Info
 def establish_session():
     print("\nFlashArray {} (version {}) REST session established!\n".format(array_info['array_name'], array_info['version']))
     print(array_info, "\n")
+#-------------------------------------------#
+#       Done Establishing REST Session      #
+#-------------------------------------------#
+
+
+#-------------------------------------------#
+#             REST API Functions            #
+#-------------------------------------------#
+# List All Open Alerts
+def list_alerts(filtering=None):
+    heading = "All Open Alerts"
+
+    allAlerts = array.list_messages()
+
+    # Make DataFrame containing all open alerts
+    allAlertsDF = pd.DataFrame(allAlerts)
+
+    # Drop Unwanted Columns
+    allAlertsDF = allAlertsDF.drop(columns=['category', 'expected', 'actual'])
+
+    # Re-Order Columns
+    new_order = ['id', 'current_severity', 'opened', 'code', 'component_type', 'event', 'details']
+    allAlertsDF = allAlertsDF[new_order]
+
+    # Sort by Severity
+    allAlertsDF['current_severity'] = pd.Categorical(allAlertsDF['current_severity'], categories=severity_order, ordered=True)
+    allAlertsDF = allAlertsDF.sort_values(by=['current_severity', 'opened'], ascending=False)
+
+    # Rename ambiguous columns
+    allAlertsDF.rename(columns={'id': 'alert_id', 'code': 'alert_code', 'details': 'alert_details'}, inplace=True)
+
+    print(allAlertsDF)
+
+    if filtering is None:
+        heading = "All Open Alerts"
+
+        # Format DataFrame
+        allAlertsOutputDF = update_dataframe(allAlertsDF)
+        
+        print(allAlertsOutputDF)
+
+        return(heading, allAlertsOutputDF)
+        
+    else:
+        print("Plans to filter indicated. Returning unformatted table of all alerts.\n\n")
+
+        return(allAlertsDF)
+    
+# List all Replication Related Alerts
+def list_alertsReplication(allAlertsDF):
+    heading = 'Open Replication Alerts'
+
+    # Filter for Replication Alerts
+    replicationAlertsDF = allAlertsDF[allAlertsDF['alert_code'].isin(replication_alert_codes)]
+
+    replAlertsOutputDF = update_dataframe(replicationAlertsDF)
+
+    print(replAlertsOutputDF)
+
+    return(heading, replAlertsOutputDF)
+
+
 
 # List Array Connections
 def list_arrayConnections():
@@ -126,10 +206,18 @@ def get_replicaStatus():
     print(replicasOutputDF)
 
     return(replicasOutputDF, heading)
+#-------------------------------------------#
+#          End REST API Functions           #
+#-------------------------------------------#
 
+
+#-------------------------------------------#
+#      Functions to Format DataFrames       #
+#-------------------------------------------#
 def update_dataframe(input):
 
     df = input
+    df = df.copy()
 
     # Convert Timestamps to Human Readable
     if 'recovery_point' in df:
@@ -167,11 +255,16 @@ def update_dataframe(input):
                     'inbound': '\N{LEFTWARDS ARROW}'
                     })
     return(df)
+#-------------------------------------------#
+#        Done Formatting DataFrames         #
+#-------------------------------------------#
 
-################
-# Run Program  #
-################
 
+#############################################
+##-----------------------------------------##
+##               Run Program               ##
+##-----------------------------------------##
+#############################################
 # Initialize Array
 array = purestorage.FlashArray("10.235.116.230", api_token="26d6ca06-3496-6f9a-936e-5c88cd6ed359")
 array_info = array.get()
@@ -179,6 +272,10 @@ array_info = array.get()
 establish_session()
 
 # Compile Data
-list_arrayConnections() # Array Connections
-get_replicaStatus()     # Replica Link Status (ActiveCluster)
-list_pods()             # List Pods
+#list_arrayConnections() # Array Connections
+#get_replicaStatus()     # Replica Link Status (ActiveCluster)
+#list_pods()             # List Pods
+
+list_alerts()
+allAlerts = list_alerts(1)
+list_alertsReplication(allAlerts)
