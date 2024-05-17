@@ -46,7 +46,7 @@ def list_arrayConnections():
 
 # List All Pods
 def list_pods():
-    heading = "Pods"
+    heading = "Active Cluster Pods"
 
     pods = array.list_pods()
 
@@ -61,10 +61,10 @@ def list_pods():
     podsFilteredDF = podsDF[podsDF['arrays'].apply(len) > 1]
 
     # Drop unwanted columns from Pods table
-    podsFilteredDF = podsFilteredDF.drop(columns=['link_source_count', 'link_target_count', 'requested_promotion_state'])
+    podsFilteredDF = podsFilteredDF.drop(columns=['link_source_count', 'link_target_count', 'requested_promotion_state', 'source'])
 
     # Re-Order the Columns
-    new_order = ['name', 'source', 'promotion_status', 'arrays']
+    new_order = ['name', 'promotion_status', 'arrays']
     podsFilteredDF = podsFilteredDF[new_order]
 
     # Explode the 'arrays' column
@@ -89,7 +89,7 @@ def list_pods():
     podsFilteredDF = pd.concat([podsDuplicatedDF, podsNormalizedArrays], axis=1)
 
     # Replace duplicate data with empty strings
-    cols_to_check = ['pod_name', 'pod_source', 'pod_promotion_status']
+    cols_to_check = ['pod_name', 'pod_promotion_status']
     podsFilteredDF.loc[:, cols_to_check] = podsFilteredDF.loc[:, cols_to_check].mask(podsFilteredDF.loc[:, cols_to_check].duplicated(), '')
 
     podsOutputDF = update_dataframe(podsFilteredDF)

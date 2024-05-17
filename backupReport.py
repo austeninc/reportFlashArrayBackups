@@ -14,32 +14,8 @@ def establish_session():
     print("\nFlashArray {} (version {}) REST session established!\n".format(array_info['array_name'], array_info['version']))
     print(array_info, "\n")
 
-# Get Replica Link Status
-# Return Formatted HTML code
-def get_replicaStatus():
-
-    heading = "Replica Link Status"
-
-    replicas = array.list_pod_replica_links()
-
-    replicasDF = pd.DataFrame(replicas)
-
-    # Specify the new column order
-    new_order = ['local_pod_name', 'direction', 'remote_names', 'remote_pod_name', 'status', 'recovery_point', 'lag']
-
-    # Reorder the DataFrame columns
-    replicasOutputDF = replicasDF[new_order]
-
-     # Sort by Direction
-    replicasOutputDF = replicasOutputDF.sort_values(by=['local_pod_name', 'direction'], ascending=True)
-
-    # Format DataFrame
-    replicasOutputDF = update_dataframe(replicasOutputDF)
-
-    make_html(replicasOutputDF, heading)
-
-    return(replicasOutputDF, heading)
-
+# List Array Connections
+## Return Formatted HTML code
 def list_arrayConnections():
     heading = "Array Connections"
 
@@ -66,9 +42,36 @@ def list_arrayConnections():
 
     return(connectionsOutputDF, heading)
 
+# Get Replica Link Status
+## Return Formatted HTML code
+def get_replicaStatus():
+
+    heading = "Replica Link Status"
+
+    replicas = array.list_pod_replica_links()
+
+    replicasDF = pd.DataFrame(replicas)
+
+    # Specify the new column order
+    new_order = ['local_pod_name', 'direction', 'remote_names', 'remote_pod_name', 'status', 'recovery_point', 'lag']
+
+    # Reorder the DataFrame columns
+    replicasOutputDF = replicasDF[new_order]
+
+     # Sort by Direction
+    replicasOutputDF = replicasOutputDF.sort_values(by=['local_pod_name', 'direction'], ascending=True)
+
+    # Format DataFrame
+    replicasOutputDF = update_dataframe(replicasOutputDF)
+
+    make_html(replicasOutputDF, heading)
+
+    return(replicasOutputDF, heading)
+
 # List All Pods
+## Return Formatted HTML code
 def list_pods():
-    heading = "Pods"
+    heading = "Active Cluster Pods"
 
     pods = array.list_pods()
 
@@ -79,10 +82,10 @@ def list_pods():
     podsFilteredDF = podsDF[podsDF['arrays'].apply(len) > 1]
 
     # Drop unwanted columns from Pods table
-    podsFilteredDF = podsFilteredDF.drop(columns=['link_source_count', 'link_target_count', 'requested_promotion_state'])
+    podsFilteredDF = podsFilteredDF.drop(columns=['link_source_count', 'link_target_count', 'requested_promotion_state', 'source'])
 
     # Re-Order the Columns
-    new_order = ['name', 'source', 'promotion_status', 'arrays']
+    new_order = ['name', 'promotion_status', 'arrays']
     podsFilteredDF = podsFilteredDF[new_order]
 
     # Explode the 'arrays' column
@@ -107,7 +110,7 @@ def list_pods():
     podsFilteredDF = pd.concat([podsDuplicatedDF, podsNormalizedArrays], axis=1)
 
     # Replace duplicate data with empty strings
-    cols_to_check = ['pod_name', 'pod_source', 'pod_promotion_status']
+    cols_to_check = ['pod_name', 'pod_promotion_status']
     podsFilteredDF.loc[:, cols_to_check] = podsFilteredDF.loc[:, cols_to_check].mask(podsFilteredDF.loc[:, cols_to_check].duplicated(), '')
     ###### Clean Up Complete ########
 
@@ -120,7 +123,8 @@ def list_pods():
     return(podsOutputDF, heading)
 
 
-
+# Rename Columns & Cells
+## Return updated DataFrame
 def update_dataframe(input):
 
     df = input
@@ -186,7 +190,7 @@ def format_table(htmlInput, heading):
     html = htmlInput.replace('<table border="1" class="dataframe">',
                                 '<table style="border-collapse: collapse; width: 100%; font-family: Arial, sans-serif;">')
     html = html.replace('<thead>',
-                            '<thead style="color: white; border-bottom: 5px solid #FE5000;">')
+                            '<thead style="color: white; border-bottom: 3px solid #FE5000;">')
     html = html.replace('<th>',
                             '<th style="color:white; border-bottom: 1px solid #FE5000; text-align: left; padding: 8px;">')
     html = html.replace('<td>',
