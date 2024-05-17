@@ -50,9 +50,10 @@ def list_pods():
 
     pods = array.list_pods()
 
-    """print("\n\n", heading, "\n")
-    for r in range(len(pods)):
-        print(pods[r], "\n") """
+    print("\n\n", heading, "\n")
+    print("Uncomment the for loop to print this output (cut for length)\n\n")
+    #for r in range(len(pods)):
+    #    print(pods[r], "\n")
 
     podsDF = pd.DataFrame(pods)
 
@@ -178,6 +179,6 @@ array_info = array.get()
 establish_session()
 
 # Compile Data
-#list_arrayConnections() # Array Connections
-#get_replicaStatus()     # Replica Link Status (ActiveCluster)
+list_arrayConnections() # Array Connections
+get_replicaStatus()     # Replica Link Status (ActiveCluster)
 list_pods()             # List Pods
