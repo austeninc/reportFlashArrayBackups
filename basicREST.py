@@ -12,7 +12,8 @@ requests.packages.urllib3.disable_warnings()
 #              Global Variables             #
 #-------------------------------------------#
 # Alert Codes Specific to Replication Function
-replication_alert_codes = [50, 52, 55, 119, 120, 121, 123, 142, 143, 145, 152, 233, 13, 46, 51, 76, 77, 78, 122, 140, 151, 154, 157, 177, 226, 182, 192]
+#-- Refer to Pure documentation for latest alert codes: https://support.purestorage.com/bundle/m_purityfa_alerts/page/FlashArray/PurityFA/topics/concept/c_purityfa_alerts.html
+replication_alert_codes = [13, 46, 50, 51, 52, 55, 76, 77, 78, 119, 120, 121, 122, 123, 140, 142, 143, 145, 151, 152, 154, 157, 177, 182, 192, 226, 233]
 
 # Define the custom order for 'current_severity'
 #-- This is reversed to allow for reverse sorting by date in later functions
