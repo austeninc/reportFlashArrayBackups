@@ -61,7 +61,12 @@ def list_alerts(filtering=None):
     # Rename ambiguous columns
     allAlertsDF.rename(columns={'id': 'alert_id', 'code': 'alert_code', 'details': 'alert_details'}, inplace=True)
 
-    if filtering is None:
+    # Handling Output
+    if filtering is None:                       # Default: Provide no output and return unfiltered dataframe
+        print("No request for All Alerts Output. Returning unformatted table of all alerts.\n\n")
+        return(allAlertsDF)
+    
+    else:                                       # If argument is provided [e.g. list_alerts(True)], then provide output for All Alerts and do nothing else
         heading = "All Open Alerts"
 
         # Format DataFrame
@@ -70,12 +75,8 @@ def list_alerts(filtering=None):
         print("\n", heading, "\n")
         print(allAlertsOutputDF)
 
-        return(heading, allAlertsOutputDF)
+        return(heading, allAlertsOutputDF)      # Consider returning unfiltered table, too, just in case (this is not implemented)
         
-    else:
-        print("Plans to filter indicated. Returning unformatted table of all alerts.\n\n")
-
-        return(allAlertsDF)
     
 # List all Replication Related Alerts
 def list_alertsReplication(allAlertsDF):
@@ -84,6 +85,7 @@ def list_alertsReplication(allAlertsDF):
     # Filter for Replication Alerts
     replicationAlertsDF = allAlertsDF[allAlertsDF['alert_code'].isin(replication_alert_codes)]
 
+    # Format dataframe
     replAlertsOutputDF = update_dataframe(replicationAlertsDF)
 
     print("\n", heading, "\n")
@@ -91,7 +93,20 @@ def list_alertsReplication(allAlertsDF):
 
     return(heading, replAlertsOutputDF)
 
+# List all Critical Alerts
+def list_alertsCritical(allAlertsDF):
+    heading = "Open Critical Alerts"
 
+    # Filter for Critical Alerts
+    criticalAlertsDF = allAlertsDF[allAlertsDF['current_severity'] == 'critical']
+
+    # Format dataframe
+    critAlertsOutputDF = update_dataframe(criticalAlertsDF)
+
+    print("\n", heading, "\n")
+    print(critAlertsOutputDF)
+
+    return(heading, critAlertsOutputDF)
 
 # List Array Connections
 def list_arrayConnections():
@@ -291,6 +306,7 @@ establish_session()
 #get_replicaStatus()     # Replica Link Status (ActiveCluster)
 #list_pods()             # List Pods
 
-list_alerts()
-allAlerts = list_alerts(1)
+list_alerts(True)
+allAlerts = list_alerts()
 list_alertsReplication(allAlerts)
+list_alertsCritical(allAlerts)
