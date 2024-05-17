@@ -34,6 +34,9 @@ def list_arrayConnections():
     # Sort by Direction
     connectionsOutputDF = connectionsOutputDF.sort_values(by=['status', 'array_name'], ascending=False)
 
+    # Rename 'array_name' to clearly be Remote
+    connectionsOutputDF = connectionsOutputDF.rename(columns={'array_name': 'remote_name'})
+
     # Format DataFrame
     connectionsOutputDF = update_dataframe(connectionsOutputDF)
 
@@ -47,13 +50,50 @@ def list_pods():
 
     pods = array.list_pods()
 
-    print("\n\n", heading, "\n")
+    """print("\n\n", heading, "\n")
     for r in range(len(pods)):
-        print(pods[r], "\n")
+        print(pods[r], "\n") """
 
     podsDF = pd.DataFrame(pods)
 
-    print(podsDF)
+    # Filter out non-replicating pods
+    podsFilteredDF = podsDF[podsDF['arrays'].apply(len) > 1]
+
+    # Drop unwanted columns from Pods table
+    podsFilteredDF = podsFilteredDF.drop(columns=['link_source_count', 'link_target_count', 'requested_promotion_state'])
+
+    # Re-Order the Columns
+    new_order = ['name', 'source', 'promotion_status', 'arrays']
+    podsFilteredDF = podsFilteredDF[new_order]
+
+    # Explode the 'arrays' column
+    podsArrays = podsFilteredDF.explode('arrays').reset_index(drop=True)
+
+    # Normalize the exploded 'arrays' column
+    podsNormalizedArrays = pd.json_normalize(podsArrays['arrays'])
+
+    # Drop unwanted columns from normalized arrays
+    podsNormalizedArrays = podsNormalizedArrays.drop(columns=['pre_elected', 'frozen_at', 'progress', 'array_id'])
+
+    # Clean up column names to clearly state "array_name"
+    podsNormalizedArrays = podsNormalizedArrays.rename(columns={'name': 'array_name'})
+
+    # Add a 'pod_' prefix to column names for clarity
+    podsArrays = podsArrays.add_prefix('pod_')
+
+    # Repeat the rows in the original DataFrame to match the length of the exploded arrays
+    podsDuplicatedDF = podsArrays.drop(columns=['pod_arrays']).reset_index(drop=True)
+
+    # Concatenate the repeated rows with the normalized arrays
+    podsFilteredDF = pd.concat([podsDuplicatedDF, podsNormalizedArrays], axis=1)
+
+    # Replace duplicate data with empty strings
+    cols_to_check = ['pod_name', 'pod_source', 'pod_promotion_status']
+    podsFilteredDF.loc[:, cols_to_check] = podsFilteredDF.loc[:, cols_to_check].mask(podsFilteredDF.loc[:, cols_to_check].duplicated(), '')
+
+    podsOutputDF = update_dataframe(podsFilteredDF)
+
+    print(podsOutputDF)
 
 
 # Get Replica Link Status
@@ -105,7 +145,7 @@ def update_dataframe(input):
                      'status': 'Status',
                      'management_address': 'Management IP',
                      'id': 'Array ID',
-                     'array_name': 'Remote Array',
+                     'array_name': 'Array',
                      'replication_address': 'Replication IP',
                      'type': 'Replication Type',
                      'local_pod_name': 'Local Pod',
@@ -113,7 +153,11 @@ def update_dataframe(input):
                      'remote_pod_name': 'Remote Pod',
                      'recovery_point': 'Recovery Point',
                      'direction': 'Direction',
-                     'lag': 'Lag'
+                     'lag': 'Lag',
+                     'pod_name': 'Pod',
+                     'pod_source': 'Source',
+                     'pod_promotion_status': 'Promotion Status',
+                     'mediator_status': 'Mediator Status'
                     }, inplace=True)
     
     # Replace 'Engineer' with 'Software Engineer' in the 'Occupation' column
@@ -134,6 +178,6 @@ array_info = array.get()
 establish_session()
 
 # Compile Data
-list_arrayConnections() # Array Connections
-get_replicaStatus()     # Replica Link Status (ActiveCluster)
+#list_arrayConnections() # Array Connections
+#get_replicaStatus()     # Replica Link Status (ActiveCluster)
 list_pods()             # List Pods
