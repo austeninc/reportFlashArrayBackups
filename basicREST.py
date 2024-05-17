@@ -22,7 +22,6 @@ severity_order = ['info', 'warning', 'critical']
 #            End Global Variables           #
 #-------------------------------------------#
 
-
 #-------------------------------------------#
 #           Establish REST Session          #
 #-------------------------------------------#
@@ -34,10 +33,11 @@ def establish_session():
 #       Done Establishing REST Session      #
 #-------------------------------------------#
 
-
 #-------------------------------------------#
 #             REST API Functions            #
 #-------------------------------------------#
+
+#------------ Alerting ------------#
 # List All Open Alerts
 def list_alerts(filtering=None):
     heading = "All Open Alerts"
@@ -77,7 +77,6 @@ def list_alerts(filtering=None):
 
         return(heading, allAlertsOutputDF)      # Consider returning unfiltered table, too, just in case (this is not implemented)
         
-    
 # List all Replication Related Alerts
 def list_alertsReplication(allAlertsDF):
     heading = 'Open Replication Alerts'
@@ -107,7 +106,10 @@ def list_alertsCritical(allAlertsDF):
     print(critAlertsOutputDF)
 
     return(heading, critAlertsOutputDF)
+#---------- End Alerting ----------#
 
+
+#-------- Array Connections -------#
 # List Array Connections
 def list_arrayConnections():
     heading = "Array Connections"
@@ -138,7 +140,9 @@ def list_arrayConnections():
     print(connectionsOutputDF)
 
     return(connectionsOutputDF, heading)
+#------ End Array Connections -----#
 
+#--- ActiveCluster (sync) Status --#
 # List All Pods
 def list_pods():
     heading = "Active Cluster Pods"
@@ -190,8 +194,9 @@ def list_pods():
     podsOutputDF = update_dataframe(podsFilteredDF)
 
     print(podsOutputDF)
+#---- End ActiveCluster Status ----#
 
-
+#----- ActiveDR (async) Status ----#
 # Get Replica Link Status
 def get_replicaStatus():
     heading = "Replica Link Status"
@@ -221,14 +226,17 @@ def get_replicaStatus():
     print(replicasOutputDF)
 
     return(replicasOutputDF, heading)
+#------ End ActiveDR  Status ------#
+
 #-------------------------------------------#
 #          End REST API Functions           #
 #-------------------------------------------#
 
-
 #-------------------------------------------#
 #      Functions to Format DataFrames       #
 #-------------------------------------------#
+# Rename Columns & Cells
+## Return updated DataFrame
 def update_dataframe(input):
 
     df = input
@@ -288,7 +296,6 @@ def update_dataframe(input):
 #-------------------------------------------#
 #        Done Formatting DataFrames         #
 #-------------------------------------------#
-
 
 #############################################
 ##-----------------------------------------##

@@ -8,12 +8,108 @@ import datetime
 import requests.packages.urllib3 # type: ignore
 requests.packages.urllib3.disable_warnings()
 
+#-------------------------------------------#
+#              Global Variables             #
+#-------------------------------------------#
+# Alert Codes Specific to Replication Function
+replication_alert_codes = [50, 52, 55, 119, 120, 121, 123, 142, 143, 145, 152, 233, 13, 46, 51, 76, 77, 78, 122, 140, 151, 154, 157, 177, 226, 182, 192]
 
+# Define the custom order for 'current_severity'
+#-- This is reversed to allow for reverse sorting by date in later functions
+severity_order = ['info', 'warning', 'critical']
+
+#-------------------------------------------#
+#            End Global Variables           #
+#-------------------------------------------#
+
+#-------------------------------------------#
+#           Establish REST Session          #
+#-------------------------------------------#
 # Validate Connection & Output Info
 def establish_session():
     print("\nFlashArray {} (version {}) REST session established!\n".format(array_info['array_name'], array_info['version']))
     print(array_info, "\n")
+#-------------------------------------------#
+#       Done Establishing REST Session      #
+#-------------------------------------------#
 
+#-------------------------------------------#
+#             REST API Functions            #
+#-------------------------------------------#
+
+#------------ Alerting ------------#
+# List All Open Alerts
+def list_alerts(filtering=None):
+    heading = "All Open Alerts"
+
+    allAlerts = array.list_messages()
+
+    # Make DataFrame containing all open alerts
+    allAlertsDF = pd.DataFrame(allAlerts)
+
+    # Drop Unwanted Columns
+    allAlertsDF = allAlertsDF.drop(columns=['category', 'expected', 'actual'])
+
+    # Re-Order Columns
+    new_order = ['id', 'current_severity', 'opened', 'code', 'component_type', 'event', 'details']
+    allAlertsDF = allAlertsDF[new_order]
+
+    # Sort by Severity
+    allAlertsDF['current_severity'] = pd.Categorical(allAlertsDF['current_severity'], categories=severity_order, ordered=True)
+    allAlertsDF = allAlertsDF.sort_values(by=['current_severity', 'opened'], ascending=False)
+
+    # Rename ambiguous columns
+    allAlertsDF.rename(columns={'id': 'alert_id', 'code': 'alert_code', 'details': 'alert_details'}, inplace=True)
+
+    # Handling Output
+    if filtering is None:                       # Default: Provide no output and return unfiltered dataframe
+        print("No request for All Alerts Output. Returning unformatted table of all alerts.\n\n")
+        return(allAlertsDF)
+    
+    else:                                       # If argument is provided [e.g. list_alerts(True)], then provide output for All Alerts and do nothing else
+        heading = "All Open Alerts"
+
+        # Format DataFrame
+        allAlertsOutputDF = update_dataframe(allAlertsDF)
+        
+        print("\n", heading, "\n")
+        print(allAlertsOutputDF)
+
+        return(heading, allAlertsOutputDF)      # Consider returning unfiltered table, too, just in case (this is not implemented)
+        
+# List all Replication Related Alerts
+def list_alertsReplication(allAlertsDF):
+    heading = 'Open Replication Alerts'
+
+    # Filter for Replication Alerts
+    replicationAlertsDF = allAlertsDF[allAlertsDF['alert_code'].isin(replication_alert_codes)]
+
+    # Format dataframe
+    replAlertsOutputDF = update_dataframe(replicationAlertsDF)
+
+    print("\n", heading, "\n")
+    print(replAlertsOutputDF)
+
+    return(heading, replAlertsOutputDF)
+
+# List all Critical Alerts
+def list_alertsCritical(allAlertsDF):
+    heading = "Open Critical Alerts"
+
+    # Filter for Critical Alerts
+    criticalAlertsDF = allAlertsDF[allAlertsDF['current_severity'] == 'critical']
+
+    # Format dataframe
+    critAlertsOutputDF = update_dataframe(criticalAlertsDF)
+
+    print("\n", heading, "\n")
+    print(critAlertsOutputDF)
+
+    return(heading, critAlertsOutputDF)
+#---------- End Alerting ----------#
+
+
+#-------- Array Connections -------#
 # List Array Connections
 ## Return Formatted HTML code
 def list_arrayConnections():
@@ -41,7 +137,9 @@ def list_arrayConnections():
     make_html(connectionsOutputDF, heading)
 
     return(connectionsOutputDF, heading)
+#------ End Array Connections -----#
 
+#----- ActiveDR (async) Status ----#
 # Get Replica Link Status
 ## Return Formatted HTML code
 def get_replicaStatus():
@@ -67,7 +165,9 @@ def get_replicaStatus():
     make_html(replicasOutputDF, heading)
 
     return(replicasOutputDF, heading)
+#------ End ActiveDR  Status ------#
 
+#--- ActiveCluster (sync) Status --#
 # List All Pods
 ## Return Formatted HTML code
 def list_pods():
@@ -121,8 +221,15 @@ def list_pods():
     make_html(podsOutputDF, heading)
 
     return(podsOutputDF, heading)
+#---- End ActiveCluster Status ----#
 
+#-------------------------------------------#
+#          End REST API Functions           #
+#-------------------------------------------#
 
+#-------------------------------------------#
+#      Functions to Format DataFrames       #
+#-------------------------------------------#
 # Rename Columns & Cells
 ## Return updated DataFrame
 def update_dataframe(input):
@@ -183,9 +290,13 @@ def update_dataframe(input):
                     })
 
     return(df)
+#-------------------------------------------#
+#        Done Formatting DataFrames         #
+#-------------------------------------------#
 
-    
-
+#-------------------------------------------#
+#            Prepare HTML Output            #
+#-------------------------------------------#
 # Convert DataFrame to HTML
 def make_html(dataframe, heading):
     dataFrameHTML = dataframe.to_html(index=False)
@@ -221,7 +332,13 @@ def format_table(htmlInput, heading):
 
     #print(htmlInput)
     return(html, headingHTML)
+#-------------------------------------------#
+#        Done Preparing HTML Output         #
+#-------------------------------------------#
 
+#-------------------------------------------#
+#            Write HTML to File             #
+#-------------------------------------------#
 # Write output to HTML file
 ## Create the file
 def start_html_body():
@@ -240,10 +357,15 @@ def write_html(html, title):
 def end_html_body():
     with open('test_output.html', 'a') as f:
         f.writelines("\n</body>")
+#-------------------------------------------#
+#          Done Writing HTML File           #
+#-------------------------------------------#
 
-################
-# Run Program  #
-################
+#############################################
+##-----------------------------------------##
+##               Run Program               ##
+##-----------------------------------------##
+#############################################
 
 # Initialize Array
 array = purestorage.FlashArray("10.235.116.230", api_token="26d6ca06-3496-6f9a-936e-5c88cd6ed359")
