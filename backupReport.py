@@ -139,6 +139,9 @@ def update_dataframe(input):
     # Convert Lag Time ms to seconds
 
     # Convert Alert opened Timestamps to standard format
+    ################################# Note #######################################
+    ### Need to know ARRAY LOCAL TIMEZONE to allow for tz conversion & display ###
+    ################################# Note #######################################
     if 'opened' in df:
         df['opened'] = pd.to_datetime(df['opened'], format='%Y-%m-%dT%H:%M:%SZ') #.dt.tz_localize('UTC')
         #df['opened'] = df['opened'].dt.tz_convert('America/Los_Angeles')
