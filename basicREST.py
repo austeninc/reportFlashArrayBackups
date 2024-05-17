@@ -142,6 +142,38 @@ def list_arrayConnections():
     return(connectionsOutputDF, heading)
 #------ End Array Connections -----#
 
+#----- ActiveDR (async) Status ----#
+# Get Replica Link Status
+def get_replicaStatus():
+    heading = "Replica Link Status"
+
+    replicas = array.list_pod_replica_links()
+
+    print("\n\n",heading,"\n")
+    for r in range(len(replicas)):
+        print(replicas[r], "\n")
+
+    replicasDF = pd.DataFrame(replicas)
+
+    print(replicasDF)
+
+    # Specify the new column order
+    new_order = ['local_pod_name', 'direction', 'remote_names', 'remote_pod_name', 'status', 'recovery_point', 'lag']
+
+    # Reorder the DataFrame columns
+    replicasOutputDF = replicasDF[new_order]
+
+     # Sort by Direction
+    replicasOutputDF = replicasOutputDF.sort_values(by=['local_pod_name', 'direction'], ascending=True)
+
+    # Format DataFrame
+    replicasOutputDF = update_dataframe(replicasOutputDF)
+
+    print(replicasOutputDF)
+
+    return(replicasOutputDF, heading)
+#------ End ActiveDR  Status ------#
+
 #--- ActiveCluster (sync) Status --#
 # List All Pods
 def list_pods():
@@ -195,38 +227,6 @@ def list_pods():
 
     print(podsOutputDF)
 #---- End ActiveCluster Status ----#
-
-#----- ActiveDR (async) Status ----#
-# Get Replica Link Status
-def get_replicaStatus():
-    heading = "Replica Link Status"
-
-    replicas = array.list_pod_replica_links()
-
-    print("\n\n",heading,"\n")
-    for r in range(len(replicas)):
-        print(replicas[r], "\n")
-
-    replicasDF = pd.DataFrame(replicas)
-
-    print(replicasDF)
-
-    # Specify the new column order
-    new_order = ['local_pod_name', 'direction', 'remote_names', 'remote_pod_name', 'status', 'recovery_point', 'lag']
-
-    # Reorder the DataFrame columns
-    replicasOutputDF = replicasDF[new_order]
-
-     # Sort by Direction
-    replicasOutputDF = replicasOutputDF.sort_values(by=['local_pod_name', 'direction'], ascending=True)
-
-    # Format DataFrame
-    replicasOutputDF = update_dataframe(replicasOutputDF)
-
-    print(replicasOutputDF)
-
-    return(replicasOutputDF, heading)
-#------ End ActiveDR  Status ------#
 
 #-------------------------------------------#
 #          End REST API Functions           #
