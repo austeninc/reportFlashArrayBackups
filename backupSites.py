@@ -225,6 +225,8 @@ make_html(summaryHeading, summaryHeadingStyle, sitesDF)
 for site, arrays in arraysDF.items(): # Iterate through sitesDF to collect data
     print(f"\nDataframe for {site}:\n", arrays)
     siteArraysDF = arrays
+    warnSiteConnectionsDict = {}
+    warnSiteConnectionsDF = pd.DataFrame()
 
     # Add new columns for array_name and purity_version if not already present
     if 'array_name' not in siteArraysDF.columns:
@@ -271,7 +273,10 @@ for site, arrays in arraysDF.items(): # Iterate through sitesDF to collect data
             siteArraysDF.at[index, 'array_connections_status'] = connectionsStatus
         if connectionsStatus == "Warning":
             siteArraysDF.at[index, 'array_connections_status'] = connectionsStatus
-            format_arrayConnections(arrayName, connectionsHeading, connectionsDF)
+            connectionsHeading, warnConnectionsDF = format_arrayConnections(arrayName, connectionsHeading, connectionsDF)
+
+            # Update Site Warnings DataFrame with new data
+            warnSiteConnectionsDF = pd.concat([warnSiteConnectionsDF, warnConnectionsDF], ignore_index=True)
         ### End Array Connection Information ###
 
         ### Get ActiveDR (async) Information ###
@@ -286,9 +291,17 @@ for site, arrays in arraysDF.items(): # Iterate through sitesDF to collect data
     # Remove array, mgmt_ip and api_token columns from siteArraysDF
     siteArraysDF = siteArraysDF.drop(columns=['array', 'mgmt_ip', 'api_token'])
     print(siteArraysDF)
+
+    # Output Site Arrays to HTML
     arraysHeading = (f"{site} Arrays")
     arraysHeadingStyle = 2
     make_html(arraysHeading, arraysHeadingStyle, siteArraysDF)
+
+    # Output Unhealthy Connections to HTML
+    if warnSiteConnectionsDF.empty == False:
+        connectionsHeading = (f"{site} Unhealthy Array Connections")
+        connectionsHeadingStyle = 3
+        make_html(connectionsHeading, connectionsHeadingStyle, warnSiteConnectionsDF)
 
 
 end_html_body()

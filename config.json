@@ -15,6 +15,11 @@
           "array": "slc-301-fa02",
           "mgmt_ip": "10.235.116.31",
           "api_token": "1dcc283a-b16a-c736-a094-7442288f1e9b"
+        },
+        {
+          "array": "slc-305-fa07",
+          "mgmt_ip": "10.235.116.227",
+          "api_token": "d7141d9c-dffc-6dae-7313-7d51030e26de"
         }
       ],
       "San Jose": [
