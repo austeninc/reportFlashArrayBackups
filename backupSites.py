@@ -119,50 +119,92 @@ def format_arrayConnections(arrayName, heading, connectionsDF):
 #          End REST API Functions           #
 #-------------------------------------------#
 
+#-------------------------------------------#
+#            Prepare HTML Output            #
+#-------------------------------------------#
+# Convert DataFrame to HTML
+def make_html(heading, headingStyle, dataframe):
+    dataFrameHTML = dataframe.to_html(index=False)
 
+    if headingStyle == 1:
+        headingHTML = "<h1>" + heading + "</h1>\n\n"
+    if headingStyle == 2:
+        headingHTML = "<h2>" + heading + "</h2>\n\n"
+    if headingStyle == 3:
+        headingHTML = "<h3>" + heading + "</h3>\n\n"
+    
+    heading, htmlOutput = format_table(headingHTML, headingStyle, dataFrameHTML)
+
+    write_html(heading, htmlOutput)
+
+    return(heading, htmlOutput)
+
+# Format any HTML table
+def format_table(heading, headingStyle, htmlInput):
+
+    if headingStyle == 1:
+        headingHTML = heading.replace('<h1>',
+                                        '\n<h1 style="color: white; width: 100%; font-family: Arial, sans-serif; font-size: 1.25em;">')
+    if headingStyle == 2:
+        headingHTML = heading.replace('<h2>',
+                                        '\n<h2 style="color: white; width: 100%; font-family: Arial, sans-serif; font-size: 1.25em;">')
+    if headingStyle == 3:
+        headingHTML = heading.replace('<h3>',
+                                        '\n<h3 style="color: white; width: 100%; font-family: Arial, sans-serif; font-size: 1em;">')
+
+    html = htmlInput.replace('<table border="1" class="dataframe">',
+                                '<table style="border-collapse: collapse; width: 100%; font-family: Arial, sans-serif;">')
+    html = html.replace('<thead>',
+                            '<thead style="color: white; border-bottom: 3px solid #FE5000;">')
+    html = html.replace('<th>',
+                            '<th style="color:white; border-bottom: 1px solid #FE5000; text-align: left; padding: 8px;">')
+    html = html.replace('<td>',
+                            '<td style="color:white; border-bottom: 1px solid #DADADA; text-align: left; padding: 8px;">')
+    #html = html.replace('<tr>',
+    #                        '<tr style="background-color: #6C6C6C;">')
+    html = html.replace('<tr>',
+                            '<tr style="color:white; background-color: #1C1C1C;">')
+    html = html.replace('</table>',
+                            '</table>\n')
+
+    #print(htmlInput)
+    return(headingHTML, html)
+#-------------------------------------------#
+#        Done Preparing HTML Output         #
+#-------------------------------------------#
+
+#-------------------------------------------#
+#            Write HTML to File             #
+#-------------------------------------------#
+# Write output to HTML file
+## Create the file
+def start_html_body():
+    with open('test_sites_output.html', 'w') as f:
+        f.write("<body style=\"background-color: #1C1C1C; padding-top: 2vh; padding-left: 7vw; padding-right: 8vw;\">\n")
+        f.write("<img src='assets/pstg_logo_darkMode.svg' width=250 /><br /><br />")
+
+## Add site summary to the file
+def site_summary_to_html():
+    with open('test_sites_output.html', 'a') as f:
+        f.write("<h1>Summary</h1>")
+
+## Add tables to HTML
+def write_html(title, html):
+    with open('test_sites_output.html', 'a') as f:
+        f.writelines(title)
+        f.writelines(html)
+        f.writelines('</br></br>')
+
+## Close the file with ending body tag
+def end_html_body():
+    with open('test_sites_output.html', 'a') as f:
+        f.writelines("\n</body>")
 
 #############################################
 ##-----------------------------------------##
 ##               Run Program               ##
 ##-----------------------------------------##
 #############################################
-
-
-
-
-#def get_arrays_per_site(siteName):
-
-
-
-def process_json_config(filePath):
-    """
-    # Load the JSON file
-    with open(filePath, 'r') as file:
-        config = json.load(file)
-
-    # Prepare Sites DataFrame
-    sitesList = list(config["sites"].keys())
-    sitesDF = pd.DataFrame(sitesList, columns='Site')
-
-    print()
-    
-    # Iterate through the sites
-    
-    for site, arrays in config["sites"].items():
-        print(f"Processing site: {site}")
-        
-        # Iterate through the arrays within each site
-        for array in arrays:
-            array_name = array["array"]
-            mgmt_ip = array["mgmt_ip"]
-            api_token = array["api_token"]
-            
-            # Perform some actions with the values
-            print(f"Array: {array_name}")
-            print(f"Management IP: {mgmt_ip}")
-            print(f"API Token: {api_token}")
-            print("-" * 30)
-    """
 
 # Read the config file and transform to JSON data
 configJSON = "config.json"
@@ -173,6 +215,12 @@ sitesDF = get_sites(config)
 arraysDF = get_arrays(config)
 
 print(sitesDF)
+
+start_html_body()
+# Summarize Sites in HTML
+summaryHeading = "Summary"
+summaryHeadingStyle = 1
+make_html(summaryHeading, summaryHeadingStyle, sitesDF)
 
 for site, arrays in arraysDF.items(): # Iterate through sitesDF to collect data
     print(f"\nDataframe for {site}:\n", arrays)
@@ -238,14 +286,9 @@ for site, arrays in arraysDF.items(): # Iterate through sitesDF to collect data
     # Remove array, mgmt_ip and api_token columns from siteArraysDF
     siteArraysDF = siteArraysDF.drop(columns=['array', 'mgmt_ip', 'api_token'])
     print(siteArraysDF)
+    arraysHeading = (f"{site} Arrays")
+    arraysHeadingStyle = 2
+    make_html(arraysHeading, arraysHeadingStyle, siteArraysDF)
 
 
-    #establish_session(siteArraysDF)
-
-#-------------------------------------------#
-#                Define Sites               #
-#-------------------------------------------#
-#sites = ['Salt Lake City', 'Mountain View']
-#-------------------------------------------#
-#            End Sites Definition           #
-#-------------------------------------------#
+end_html_body()
