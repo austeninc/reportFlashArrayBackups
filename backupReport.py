@@ -3,8 +3,6 @@ from purestorage import FlashArray
 
 import pandas as pd
 
-import datetime
-
 import requests.packages.urllib3 # type: ignore
 requests.packages.urllib3.disable_warnings()
 
