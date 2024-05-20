@@ -64,10 +64,61 @@ def establish_session(mgmtIP, apiToken):
     print(array_info, "\n")
     
     return array, array_info
-
 #-------------------------------------------#
 #       Done Establishing REST Session      #
 #-------------------------------------------#
+
+#-------------------------------------------#
+#             REST API Functions            #
+#-------------------------------------------#
+#-------- Array Connections -------#
+# List Array Connections
+def list_arrayConnections(array):
+    heading = "Array Connections"
+
+    connections = array.list_array_connections()
+
+    connectionsDF = pd.DataFrame(connections)
+
+    #print(f"{heading}\n{connectionsDF}")
+
+    if connectionsDF.empty == True:
+        connectionsStatus = "N/A"
+        return(heading, connectionsDF, connectionsStatus)
+    if (connectionsDF['status'] == "connected").all():
+        connectionsStatus = "Okay"
+        return(heading, connectionsDF, connectionsStatus)
+    else:
+        connectionsStatus = "Warning"
+        return(heading, connectionsDF, connectionsStatus)
+
+# Return Formatted HTML code
+def format_arrayConnections(arrayName, heading, connectionsDF):
+    # Specify the new column order
+    new_order = ['array_name', 'version', 'type', 'status', 'throttled', 'management_address', 'replication_address', 'id']
+
+    # Reorder the DataFrame columns
+    connectionsOutputDF = connectionsDF[new_order]
+
+    # Sort by Direction
+    connectionsOutputDF = connectionsOutputDF.sort_values(by=['status', 'array_name'], ascending=False)
+
+    # Rename 'array_name' to clearly be Remote
+    connectionsOutputDF = connectionsOutputDF.rename(columns={'array_name': 'remote_names'})
+
+    # Format DataFrame
+    #connectionsOutputDF = update_dataframe(connectionsOutputDF)
+
+    #make_html(heading, connectionsOutputDF)
+
+    print(f"{arrayName}: {heading}\n{connectionsOutputDF}")
+
+    return(heading, connectionsOutputDF)
+#------ End Array Connections -----#
+#-------------------------------------------#
+#          End REST API Functions           #
+#-------------------------------------------#
+
 
 
 #############################################
@@ -136,6 +187,8 @@ for site, arrays in arraysDF.items(): # Iterate through sitesDF to collect data
         siteArraysDF['used_capacity'] = pd.NA
     if 'drr' not in siteArraysDF.columns:
         siteArraysDF['drr'] = pd.NA
+    if 'array_connections_status' not in siteArraysDF.columns:
+        siteArraysDF['array_connections_status'] = pd.NA
     if 'activeDR_status' not in siteArraysDF.columns:
         siteArraysDF['activeDR_status'] = pd.NA
     if 'activeCluster_status' not in siteArraysDF.columns:
@@ -149,13 +202,29 @@ for site, arrays in arraysDF.items(): # Iterate through sitesDF to collect data
 
         array, array_info = establish_session(mgmtIP, apiToken)
 
+        # Variables for this Iteration
+        arrayName = array_info['array_name']
+        purityVersion = array_info['version']
+
         # Update siteArraysDF with array_name & purity_version
-        siteArraysDF.at[index, 'array_name'] = array_info['array_name']
-        siteArraysDF.at[index, 'purity_version'] = array_info['version']
+        siteArraysDF.at[index, 'array_name'] = arrayName
+        siteArraysDF.at[index, 'purity_version'] = purityVersion
         #### End establish REST API session ###
 
         ### Get Capacity Information ###
         ### End Capacity Information ###
+
+        ### Get Array Connection Information ###
+        connectionsHeading, connectionsDF, connectionsStatus = list_arrayConnections(array)
+
+        if connectionsDF.empty == True:
+            siteArraysDF.at[index, 'array_connections_status'] = connectionsStatus
+        if connectionsStatus == "Okay":
+            siteArraysDF.at[index, 'array_connections_status'] = connectionsStatus
+        if connectionsStatus == "Warning":
+            siteArraysDF.at[index, 'array_connections_status'] = connectionsStatus
+            format_arrayConnections(arrayName, connectionsHeading, connectionsDF)
+        ### End Array Connection Information ###
 
         ### Get ActiveDR (async) Information ###
         ### End ActiveDR (async) Information ###
@@ -165,6 +234,7 @@ for site, arrays in arraysDF.items(): # Iterate through sitesDF to collect data
 
         print(siteArraysDF)
     
+    #### Format DataFrames ####
     # Remove array, mgmt_ip and api_token columns from siteArraysDF
     siteArraysDF = siteArraysDF.drop(columns=['array', 'mgmt_ip', 'api_token'])
     print(siteArraysDF)
