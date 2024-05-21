@@ -3,7 +3,7 @@ from purestorage import FlashArray
 
 import pandas as pd
 
-import json
+import yaml
 
 import requests.packages.urllib3 # type: ignore
 requests.packages.urllib3.disable_warnings() # Ignore SSL errors due to self-signed certs on Pure appliances
@@ -11,15 +11,11 @@ requests.packages.urllib3.disable_warnings() # Ignore SSL errors due to self-sig
 #-------------------------------------------#
 #              Read Config JSON             #
 #-------------------------------------------#
-def read_json(filePath):
-    with open(filePath, 'r') as file:
-        jsonData = file.read()
-    return jsonData
 
-def prep_config(filePath):
-    jsonData = read_json(filePath)
-    config = json.loads(jsonData)
-    return config
+def read_yaml(filePath):
+    with open(filePath, 'r') as file:
+        yamlData = yaml.safe_load(file)
+    return yamlData
 #-------------------------------------------#
 #            End Config JSON Prep           #
 #-------------------------------------------#
@@ -232,8 +228,8 @@ def end_html_body():
 #############################################
 
 # Read the config file and transform to JSON data
-configJSON = "config.json"
-config = prep_config(configJSON)
+configYAML = "config.yaml"
+config = read_yaml(configYAML)
 
 # Prepare DataFrames for each Site and the Arrays in each site
 sitesDF = get_sites(config)

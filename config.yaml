@@ -1,0 +1,21 @@
+sites:
+  Salt Lake City:
+    - array: SLC-305-FA06
+      mgmt_ip: 10.235.116.230
+      api_token: 26d6ca06-3496-6f9a-936e-5c88cd6ed359
+    - array: slc-301-fa01
+      mgmt_ip: 10.235.116.28
+      api_token: ad441914-121f-1e05-bcea-98aa1c65b793
+    - array: slc-301-fa02
+      mgmt_ip: 10.235.116.31
+      api_token: 1dcc283a-b16a-c736-a094-7442288f1e9b
+    - array: slc-305-fa07
+      mgmt_ip: 10.235.116.227
+      api_token: d7141d9c-dffc-6dae-7313-7d51030e26de
+  San Jose:
+    - array: sjc-127-fa01
+      mgmt_ip: 10.210.108.103
+      api_token: 84260e03-c7b9-98d9-54e8-73cb9dbd92a7
+    - array: sjc-128-fa02
+      mgmt_ip: 10.210.108.193
+      api_token: 320918e8-94c4-be64-9d34-a33109af03c8
