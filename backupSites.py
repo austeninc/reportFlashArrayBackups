@@ -140,21 +140,6 @@ def format_arrayConnections(arrayName, purityVersion, heading, connectionsDF):
 #-------------------------------------------#
 #               Process Sites               #
 #-------------------------------------------#
-def check_site_arrayConnection_status(array):
-    connections = array.list_array_connections()
-    connectionStatusDF = pd.DataFrame(connections)
-    #connectionsStatus = ""
-
-    if connectionStatusDF.empty == True:
-        siteConnectionsStatus = "N/A"
-        return(siteConnectionsStatus)
-    if (connectionStatusDF['status'] == "conncted").all():
-        siteConnectionsStatus = "Okay"
-        return(siteConnectionsStatus)
-    else:
-        connectionStatusDF = "Warning"
-        return(siteConnectionsStatus)
-
 #-------------------------------------------#
 #             End Process Sites             #
 #-------------------------------------------#
@@ -256,46 +241,6 @@ arraysDF = get_arrays(config)
 
 # Get counts & statuses to populate sitesDF for 'Summary' section
 sitesDF, arraysDF = site_array_count(sitesDF, arraysDF)
-
-""" # Get Array Connection Status at site level for sitesDF for 'Summary' section
-for site, arrays in arraysDF.items():
-    siteArrayConnectionsStatusDF = arrays.copy()
-
-    # Prepare empty DataFrames to populate later in case of errors
-    warnSiteConnectionsDF = pd.DataFrame()  # Array Connections per Site
-
-    for index, row in siteArrayConnectionsStatusDF.iterrows():
-
-        ### Establish REST API session ###
-        mgmtIP = row['mgmt_ip']
-        apiToken = row['api_token']
-
-        array, array_info = establish_session(mgmtIP, apiToken)
-
-        ### Get Array Connection Status ###
-
-        siteConnectionsStatus = check_site_arrayConnection_status(array)
-
-        if siteConnectionsStatus == "N/A":
-            siteArrayConnectionsStatusDF.at[index, 'array_connections_status'] = siteConnectionsStatus
-        if siteConnectionsStatus == "Okay":
-            siteArrayConnectionsStatusDF.at[index, 'array_connections_status'] = siteConnectionsStatus
-        if siteConnectionsStatus == "Warning":
-            siteArrayConnectionsStatusDF.at[index, 'array_connections_status'] = siteConnectionsStatus
-            
-            # Update Site Warnings DataFrame with new data
-            #warnSiteConnectionsDF = pd.concat([warnSiteConnectionsDF, warnConnectionsDF], ignore_index=True)
-
-            # Update Site Summary DataFrame with 'Warning'
-            connectedArraysStatus = sitesDF.loc[sitesDF['Site'] == site, 'Connected Arrays Status'].values[0]
-            if connectedArraysStatus != "Warning":
-                sitesDF.loc[sitesDF['Site'] == site, 'Connected Arrays Status'] = "Warning"
-                print(sitesDF)
-        ### End Array Connection Information ### """
-
-
-
-
 
 print(sitesDF)
 
