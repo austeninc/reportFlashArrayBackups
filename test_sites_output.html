@@ -1,12 +1,13 @@
 <body style="background-color: #1C1C1C; padding-top: 2vh; padding-left: 7vw; padding-right: 8vw;">
 <img src='assets/pstg_logo_darkMode.svg' width=250 /><br /><br />
-<h1 style="color: white; width: 100%; font-family: Arial, sans-serif; font-size: 1.25em;">Summary</h1>
+<h1 style="color: white; width: 100%; font-family: Arial, sans-serif; font-size: 1.25em;">Summary (Pre-Checks)</h1>
 
 <table style="border-collapse: collapse; width: 100%; font-family: Arial, sans-serif;">
   <thead style="color: white; border-bottom: 3px solid #FE5000;">
     <tr style="text-align: right;">
       <th style="color:white; border-bottom: 1px solid #FE5000; text-align: left; padding: 8px;">Site</th>
       <th style="color:white; border-bottom: 1px solid #FE5000; text-align: left; padding: 8px;">Arrays Count</th>
+      <th style="color:white; border-bottom: 1px solid #FE5000; text-align: left; padding: 8px;">Connected Arrays Status</th>
       <th style="color:white; border-bottom: 1px solid #FE5000; text-align: left; padding: 8px;">ActiveDR (async) Status</th>
       <th style="color:white; border-bottom: 1px solid #FE5000; text-align: left; padding: 8px;">ActiveCluster (sync) Status</th>
     </tr>
@@ -14,13 +15,15 @@
   <tbody>
     <tr style="color:white; background-color: #1C1C1C;">
       <td style="color:white; border-bottom: 1px solid #DADADA; text-align: left; padding: 8px;">Salt Lake City</td>
-      <td style="color:white; border-bottom: 1px solid #DADADA; text-align: left; padding: 8px;">&lt;NA&gt;</td>
+      <td style="color:white; border-bottom: 1px solid #DADADA; text-align: left; padding: 8px;">4</td>
+      <td style="color:white; border-bottom: 1px solid #DADADA; text-align: left; padding: 8px;">Okay</td>
       <td style="color:white; border-bottom: 1px solid #DADADA; text-align: left; padding: 8px;">&lt;NA&gt;</td>
       <td style="color:white; border-bottom: 1px solid #DADADA; text-align: left; padding: 8px;">&lt;NA&gt;</td>
     </tr>
     <tr style="color:white; background-color: #1C1C1C;">
       <td style="color:white; border-bottom: 1px solid #DADADA; text-align: left; padding: 8px;">San Jose</td>
-      <td style="color:white; border-bottom: 1px solid #DADADA; text-align: left; padding: 8px;">&lt;NA&gt;</td>
+      <td style="color:white; border-bottom: 1px solid #DADADA; text-align: left; padding: 8px;">2</td>
+      <td style="color:white; border-bottom: 1px solid #DADADA; text-align: left; padding: 8px;">Okay</td>
       <td style="color:white; border-bottom: 1px solid #DADADA; text-align: left; padding: 8px;">&lt;NA&gt;</td>
       <td style="color:white; border-bottom: 1px solid #DADADA; text-align: left; padding: 8px;">&lt;NA&gt;</td>
     </tr>
@@ -47,7 +50,7 @@
       <td style="color:white; border-bottom: 1px solid #DADADA; text-align: left; padding: 8px;">6.5.1</td>
       <td style="color:white; border-bottom: 1px solid #DADADA; text-align: left; padding: 8px;">&lt;NA&gt;</td>
       <td style="color:white; border-bottom: 1px solid #DADADA; text-align: left; padding: 8px;">&lt;NA&gt;</td>
-      <td style="color:white; border-bottom: 1px solid #DADADA; text-align: left; padding: 8px;">Okay</td>
+      <td style="color:white; border-bottom: 1px solid #DADADA; text-align: left; padding: 8px;">Warning</td>
       <td style="color:white; border-bottom: 1px solid #DADADA; text-align: left; padding: 8px;">&lt;NA&gt;</td>
       <td style="color:white; border-bottom: 1px solid #DADADA; text-align: left; padding: 8px;">&lt;NA&gt;</td>
     </tr>
@@ -74,9 +77,62 @@
       <td style="color:white; border-bottom: 1px solid #DADADA; text-align: left; padding: 8px;">6.3.6</td>
       <td style="color:white; border-bottom: 1px solid #DADADA; text-align: left; padding: 8px;">&lt;NA&gt;</td>
       <td style="color:white; border-bottom: 1px solid #DADADA; text-align: left; padding: 8px;">&lt;NA&gt;</td>
-      <td style="color:white; border-bottom: 1px solid #DADADA; text-align: left; padding: 8px;">Okay</td>
+      <td style="color:white; border-bottom: 1px solid #DADADA; text-align: left; padding: 8px;">Warning</td>
       <td style="color:white; border-bottom: 1px solid #DADADA; text-align: left; padding: 8px;">&lt;NA&gt;</td>
       <td style="color:white; border-bottom: 1px solid #DADADA; text-align: left; padding: 8px;">&lt;NA&gt;</td>
+    </tr>
+  </tbody>
+</table>
+</br></br>
+<h3 style="color: white; width: 100%; font-family: Arial, sans-serif; font-size: 1em;">Salt Lake City Unhealthy Array Connections</h3>
+
+<table style="border-collapse: collapse; width: 100%; font-family: Arial, sans-serif;">
+  <thead style="color: white; border-bottom: 3px solid #FE5000;">
+    <tr style="text-align: right;">
+      <th style="color:white; border-bottom: 1px solid #FE5000; text-align: left; padding: 8px;">local_array_name</th>
+      <th style="color:white; border-bottom: 1px solid #FE5000; text-align: left; padding: 8px;">local_version</th>
+      <th style="color:white; border-bottom: 1px solid #FE5000; text-align: left; padding: 8px;">status</th>
+      <th style="color:white; border-bottom: 1px solid #FE5000; text-align: left; padding: 8px;">remote_names</th>
+      <th style="color:white; border-bottom: 1px solid #FE5000; text-align: left; padding: 8px;">remote_version</th>
+      <th style="color:white; border-bottom: 1px solid #FE5000; text-align: left; padding: 8px;">type</th>
+      <th style="color:white; border-bottom: 1px solid #FE5000; text-align: left; padding: 8px;">throttled</th>
+      <th style="color:white; border-bottom: 1px solid #FE5000; text-align: left; padding: 8px;">management_address</th>
+      <th style="color:white; border-bottom: 1px solid #FE5000; text-align: left; padding: 8px;">replication_address</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr style="color:white; background-color: #1C1C1C;">
+      <td style="color:white; border-bottom: 1px solid #DADADA; text-align: left; padding: 8px;">SLC-305-FA06</td>
+      <td style="color:white; border-bottom: 1px solid #DADADA; text-align: left; padding: 8px;">6.5.1</td>
+      <td style="color:white; border-bottom: 1px solid #DADADA; text-align: left; padding: 8px;">connected</td>
+      <td style="color:white; border-bottom: 1px solid #DADADA; text-align: left; padding: 8px;">slc-308-fa02</td>
+      <td style="color:white; border-bottom: 1px solid #DADADA; text-align: left; padding: 8px;">6.5.1</td>
+      <td style="color:white; border-bottom: 1px solid #DADADA; text-align: left; padding: 8px;">sync-replication</td>
+      <td style="color:white; border-bottom: 1px solid #DADADA; text-align: left; padding: 8px;">True</td>
+      <td style="color:white; border-bottom: 1px solid #DADADA; text-align: left; padding: 8px;">slc-x70.slc.purestorage.com</td>
+      <td style="color:white; border-bottom: 1px solid #DADADA; text-align: left; padding: 8px;">[10.235.117.114, 10.235.117.115, 10.235.117.116, 10.235.117.117]</td>
+    </tr>
+    <tr style="color:white; background-color: #1C1C1C;">
+      <td style="color:white; border-bottom: 1px solid #DADADA; text-align: left; padding: 8px;">SLC-305-FA06</td>
+      <td style="color:white; border-bottom: 1px solid #DADADA; text-align: left; padding: 8px;">6.5.1</td>
+      <td style="color:white; border-bottom: 1px solid #DADADA; text-align: left; padding: 8px;">connected</td>
+      <td style="color:white; border-bottom: 1px solid #DADADA; text-align: left; padding: 8px;">slc-305-fa07</td>
+      <td style="color:white; border-bottom: 1px solid #DADADA; text-align: left; padding: 8px;">6.3.6</td>
+      <td style="color:white; border-bottom: 1px solid #DADADA; text-align: left; padding: 8px;">async-replication</td>
+      <td style="color:white; border-bottom: 1px solid #DADADA; text-align: left; padding: 8px;">False</td>
+      <td style="color:white; border-bottom: 1px solid #DADADA; text-align: left; padding: 8px;">10.235.116.228</td>
+      <td style="color:white; border-bottom: 1px solid #DADADA; text-align: left; padding: 8px;">[10.235.116.239]</td>
+    </tr>
+    <tr style="color:white; background-color: #1C1C1C;">
+      <td style="color:white; border-bottom: 1px solid #DADADA; text-align: left; padding: 8px;">slc-305-fa07</td>
+      <td style="color:white; border-bottom: 1px solid #DADADA; text-align: left; padding: 8px;">6.3.6</td>
+      <td style="color:white; border-bottom: 1px solid #DADADA; text-align: left; padding: 8px;">connected</td>
+      <td style="color:white; border-bottom: 1px solid #DADADA; text-align: left; padding: 8px;">SLC-305-FA06</td>
+      <td style="color:white; border-bottom: 1px solid #DADADA; text-align: left; padding: 8px;">6.5.1</td>
+      <td style="color:white; border-bottom: 1px solid #DADADA; text-align: left; padding: 8px;">async-replication</td>
+      <td style="color:white; border-bottom: 1px solid #DADADA; text-align: left; padding: 8px;">False</td>
+      <td style="color:white; border-bottom: 1px solid #DADADA; text-align: left; padding: 8px;">None</td>
+      <td style="color:white; border-bottom: 1px solid #DADADA; text-align: left; padding: 8px;">[10.235.116.237, 10.235.116.238, 10.235.116.247, 10.235.116.248]</td>
     </tr>
   </tbody>
 </table>
@@ -110,7 +166,68 @@
       <td style="color:white; border-bottom: 1px solid #DADADA; text-align: left; padding: 8px;">6.4.10</td>
       <td style="color:white; border-bottom: 1px solid #DADADA; text-align: left; padding: 8px;">&lt;NA&gt;</td>
       <td style="color:white; border-bottom: 1px solid #DADADA; text-align: left; padding: 8px;">&lt;NA&gt;</td>
-      <td style="color:white; border-bottom: 1px solid #DADADA; text-align: left; padding: 8px;">Okay</td>
+      <td style="color:white; border-bottom: 1px solid #DADADA; text-align: left; padding: 8px;">Warning</td>
+      <td style="color:white; border-bottom: 1px solid #DADADA; text-align: left; padding: 8px;">&lt;NA&gt;</td>
+      <td style="color:white; border-bottom: 1px solid #DADADA; text-align: left; padding: 8px;">&lt;NA&gt;</td>
+    </tr>
+  </tbody>
+</table>
+</br></br>
+<h3 style="color: white; width: 100%; font-family: Arial, sans-serif; font-size: 1em;">San Jose Unhealthy Array Connections</h3>
+
+<table style="border-collapse: collapse; width: 100%; font-family: Arial, sans-serif;">
+  <thead style="color: white; border-bottom: 3px solid #FE5000;">
+    <tr style="text-align: right;">
+      <th style="color:white; border-bottom: 1px solid #FE5000; text-align: left; padding: 8px;">local_array_name</th>
+      <th style="color:white; border-bottom: 1px solid #FE5000; text-align: left; padding: 8px;">local_version</th>
+      <th style="color:white; border-bottom: 1px solid #FE5000; text-align: left; padding: 8px;">status</th>
+      <th style="color:white; border-bottom: 1px solid #FE5000; text-align: left; padding: 8px;">remote_names</th>
+      <th style="color:white; border-bottom: 1px solid #FE5000; text-align: left; padding: 8px;">remote_version</th>
+      <th style="color:white; border-bottom: 1px solid #FE5000; text-align: left; padding: 8px;">type</th>
+      <th style="color:white; border-bottom: 1px solid #FE5000; text-align: left; padding: 8px;">throttled</th>
+      <th style="color:white; border-bottom: 1px solid #FE5000; text-align: left; padding: 8px;">management_address</th>
+      <th style="color:white; border-bottom: 1px solid #FE5000; text-align: left; padding: 8px;">replication_address</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr style="color:white; background-color: #1C1C1C;">
+      <td style="color:white; border-bottom: 1px solid #DADADA; text-align: left; padding: 8px;">sjc-128-fa02</td>
+      <td style="color:white; border-bottom: 1px solid #DADADA; text-align: left; padding: 8px;">6.4.10</td>
+      <td style="color:white; border-bottom: 1px solid #DADADA; text-align: left; padding: 8px;">connected</td>
+      <td style="color:white; border-bottom: 1px solid #DADADA; text-align: left; padding: 8px;">sjc-128-fa04</td>
+      <td style="color:white; border-bottom: 1px solid #DADADA; text-align: left; padding: 8px;">6.4.10</td>
+      <td style="color:white; border-bottom: 1px solid #DADADA; text-align: left; padding: 8px;">sync-replication</td>
+      <td style="color:white; border-bottom: 1px solid #DADADA; text-align: left; padding: 8px;">False</td>
+      <td style="color:white; border-bottom: 1px solid #DADADA; text-align: left; padding: 8px;">None</td>
+      <td style="color:white; border-bottom: 1px solid #DADADA; text-align: left; padding: 8px;">[10.210.89.15, 10.210.89.16]</td>
+    </tr>
+  </tbody>
+</table>
+</br></br>
+<h1 style="color: white; width: 100%; font-family: Arial, sans-serif; font-size: 1.25em;">Summary (After Checks)</h1>
+
+<table style="border-collapse: collapse; width: 100%; font-family: Arial, sans-serif;">
+  <thead style="color: white; border-bottom: 3px solid #FE5000;">
+    <tr style="text-align: right;">
+      <th style="color:white; border-bottom: 1px solid #FE5000; text-align: left; padding: 8px;">Site</th>
+      <th style="color:white; border-bottom: 1px solid #FE5000; text-align: left; padding: 8px;">Arrays Count</th>
+      <th style="color:white; border-bottom: 1px solid #FE5000; text-align: left; padding: 8px;">Connected Arrays Status</th>
+      <th style="color:white; border-bottom: 1px solid #FE5000; text-align: left; padding: 8px;">ActiveDR (async) Status</th>
+      <th style="color:white; border-bottom: 1px solid #FE5000; text-align: left; padding: 8px;">ActiveCluster (sync) Status</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr style="color:white; background-color: #1C1C1C;">
+      <td style="color:white; border-bottom: 1px solid #DADADA; text-align: left; padding: 8px;">Salt Lake City</td>
+      <td style="color:white; border-bottom: 1px solid #DADADA; text-align: left; padding: 8px;">4</td>
+      <td style="color:white; border-bottom: 1px solid #DADADA; text-align: left; padding: 8px;">Warning</td>
+      <td style="color:white; border-bottom: 1px solid #DADADA; text-align: left; padding: 8px;">&lt;NA&gt;</td>
+      <td style="color:white; border-bottom: 1px solid #DADADA; text-align: left; padding: 8px;">&lt;NA&gt;</td>
+    </tr>
+    <tr style="color:white; background-color: #1C1C1C;">
+      <td style="color:white; border-bottom: 1px solid #DADADA; text-align: left; padding: 8px;">San Jose</td>
+      <td style="color:white; border-bottom: 1px solid #DADADA; text-align: left; padding: 8px;">2</td>
+      <td style="color:white; border-bottom: 1px solid #DADADA; text-align: left; padding: 8px;">Warning</td>
       <td style="color:white; border-bottom: 1px solid #DADADA; text-align: left; padding: 8px;">&lt;NA&gt;</td>
       <td style="color:white; border-bottom: 1px solid #DADADA; text-align: left; padding: 8px;">&lt;NA&gt;</td>
     </tr>

@@ -38,17 +38,30 @@ def get_sites(config):
 
     # Prepare Empty Columns
     sitesDF['Arrays Count'] = pd.NA
+    sitesDF['Connected Arrays Status'] = "Okay"
     sitesDF['ActiveDR (async) Status'] = pd.NA
     sitesDF['ActiveCluster (sync) Status'] = pd.NA
 
     return sitesDF
 
+# Create Arrays DF
 def get_arrays(config):
     arrayDataFrames = {}
     # Prepare dataframes for arrays per site
     for site, arrays in config["sites"].items():
         arrayDataFrames[site] = pd.DataFrame(arrays)
     return arrayDataFrames
+
+# Count arrays to populate sitesDF for 'Summary' section
+def site_array_count(sitesDF, arraysDF):
+    # Count arrays in each site
+    for site, arrays in arraysDF.items():
+        arraysCount = len(arrays)
+        print(f"\nNumber of Arrays at {site}: {arraysCount}")
+        
+        # Update the 'Arrays Count' column in sitesDF
+        sitesDF.loc[sitesDF['Site'] == site, 'Arrays Count'] = arraysCount
+    return sitesDF, arraysDF
 #-------------------------------------------#
 #            End DataFrame Prep             #
 #-------------------------------------------#
@@ -80,12 +93,10 @@ def list_arrayConnections(array):
 
     connectionsDF = pd.DataFrame(connections)
 
-    #print(f"{heading}\n{connectionsDF}")
-
     if connectionsDF.empty == True:
         connectionsStatus = "N/A"
         return(heading, connectionsDF, connectionsStatus)
-    if (connectionsDF['status'] == "connected").all():
+    if (connectionsDF['status'] == "conncted").all():
         connectionsStatus = "Okay"
         return(heading, connectionsDF, connectionsStatus)
     else:
@@ -93,9 +104,16 @@ def list_arrayConnections(array):
         return(heading, connectionsDF, connectionsStatus)
 
 # Return Formatted HTML code
-def format_arrayConnections(arrayName, heading, connectionsDF):
+def format_arrayConnections(arrayName, purityVersion, heading, connectionsDF):
+    # Insert local arrayName & local Purity version
+    connectionsDF['local_array_name'] = arrayName
+    connectionsDF['local_version'] = purityVersion
+
+    # Drop remote array ID
+    connectionsDF = connectionsDF.drop(columns=['id'])
+
     # Specify the new column order
-    new_order = ['array_name', 'version', 'type', 'status', 'throttled', 'management_address', 'replication_address', 'id']
+    new_order = ['local_array_name', 'local_version', 'status', 'array_name', 'version', 'type', 'throttled', 'management_address', 'replication_address']
 
     # Reorder the DataFrame columns
     connectionsOutputDF = connectionsDF[new_order]
@@ -103,8 +121,8 @@ def format_arrayConnections(arrayName, heading, connectionsDF):
     # Sort by Direction
     connectionsOutputDF = connectionsOutputDF.sort_values(by=['status', 'array_name'], ascending=False)
 
-    # Rename 'array_name' to clearly be Remote
-    connectionsOutputDF = connectionsOutputDF.rename(columns={'array_name': 'remote_names'})
+    # Rename 'array_name' & 'version' to clearly be Remote
+    connectionsOutputDF = connectionsOutputDF.rename(columns={'array_name': 'remote_names', 'version': 'remote_version'})
 
     # Format DataFrame
     #connectionsOutputDF = update_dataframe(connectionsOutputDF)
@@ -117,6 +135,28 @@ def format_arrayConnections(arrayName, heading, connectionsDF):
 #------ End Array Connections -----#
 #-------------------------------------------#
 #          End REST API Functions           #
+#-------------------------------------------#
+
+#-------------------------------------------#
+#               Process Sites               #
+#-------------------------------------------#
+def check_site_arrayConnection_status(array):
+    connections = array.list_array_connections()
+    connectionStatusDF = pd.DataFrame(connections)
+    #connectionsStatus = ""
+
+    if connectionStatusDF.empty == True:
+        siteConnectionsStatus = "N/A"
+        return(siteConnectionsStatus)
+    if (connectionStatusDF['status'] == "conncted").all():
+        siteConnectionsStatus = "Okay"
+        return(siteConnectionsStatus)
+    else:
+        connectionStatusDF = "Warning"
+        return(siteConnectionsStatus)
+
+#-------------------------------------------#
+#             End Process Sites             #
 #-------------------------------------------#
 
 #-------------------------------------------#
@@ -214,21 +254,69 @@ config = prep_config(configJSON)
 sitesDF = get_sites(config)
 arraysDF = get_arrays(config)
 
+# Get counts & statuses to populate sitesDF for 'Summary' section
+sitesDF, arraysDF = site_array_count(sitesDF, arraysDF)
+
+""" # Get Array Connection Status at site level for sitesDF for 'Summary' section
+for site, arrays in arraysDF.items():
+    siteArrayConnectionsStatusDF = arrays.copy()
+
+    # Prepare empty DataFrames to populate later in case of errors
+    warnSiteConnectionsDF = pd.DataFrame()  # Array Connections per Site
+
+    for index, row in siteArrayConnectionsStatusDF.iterrows():
+
+        ### Establish REST API session ###
+        mgmtIP = row['mgmt_ip']
+        apiToken = row['api_token']
+
+        array, array_info = establish_session(mgmtIP, apiToken)
+
+        ### Get Array Connection Status ###
+
+        siteConnectionsStatus = check_site_arrayConnection_status(array)
+
+        if siteConnectionsStatus == "N/A":
+            siteArrayConnectionsStatusDF.at[index, 'array_connections_status'] = siteConnectionsStatus
+        if siteConnectionsStatus == "Okay":
+            siteArrayConnectionsStatusDF.at[index, 'array_connections_status'] = siteConnectionsStatus
+        if siteConnectionsStatus == "Warning":
+            siteArrayConnectionsStatusDF.at[index, 'array_connections_status'] = siteConnectionsStatus
+            
+            # Update Site Warnings DataFrame with new data
+            #warnSiteConnectionsDF = pd.concat([warnSiteConnectionsDF, warnConnectionsDF], ignore_index=True)
+
+            # Update Site Summary DataFrame with 'Warning'
+            connectedArraysStatus = sitesDF.loc[sitesDF['Site'] == site, 'Connected Arrays Status'].values[0]
+            if connectedArraysStatus != "Warning":
+                sitesDF.loc[sitesDF['Site'] == site, 'Connected Arrays Status'] = "Warning"
+                print(sitesDF)
+        ### End Array Connection Information ### """
+
+
+
+
+
 print(sitesDF)
 
 start_html_body()
 # Summarize Sites in HTML
-summaryHeading = "Summary"
+## BEFORE UPDATING ANY STATUSES
+summaryHeading = "Summary (Pre-Checks)"
 summaryHeadingStyle = 1
 make_html(summaryHeading, summaryHeadingStyle, sitesDF)
 
+# Make an empty dict to store gathered array information...
+siteArraysDict = {}
+warnSiteConnectionsDict = {}
+
+
+
 for site, arrays in arraysDF.items(): # Iterate through sitesDF to collect data
     print(f"\nDataframe for {site}:\n", arrays)
-    siteArraysDF = arrays
-    warnSiteConnectionsDict = {}
-    warnSiteConnectionsDF = pd.DataFrame()
+    siteArraysDF = arrays.copy()
 
-    # Add new columns for array_name and purity_version if not already present
+    # Add new columns to siteArraysDF for array_name and purity_version if not already present
     if 'array_name' not in siteArraysDF.columns:
         siteArraysDF['array_name'] = pd.NA
     if 'purity_version' not in siteArraysDF.columns:
@@ -243,6 +331,12 @@ for site, arrays in arraysDF.items(): # Iterate through sitesDF to collect data
         siteArraysDF['activeDR_status'] = pd.NA
     if 'activeCluster_status' not in siteArraysDF.columns:
         siteArraysDF['activeCluster_status'] = pd.NA
+
+    # Prepare empty DataFrames to populate later in case of errors
+    warnSiteConnectionsDF = pd.DataFrame()  # Array Connections per Site
+
+    warnSiteAsyncDF = pd.DataFrame()        # ActiveDR (async) Status per Site
+    warnSiteSyncDF = pd.DataFrame()         # ActiveCluster (sync) Status per Site
 
     for index, row in siteArraysDF.iterrows(): # Iterate through arraysDF to collect data for each array in each site
 
@@ -273,10 +367,16 @@ for site, arrays in arraysDF.items(): # Iterate through sitesDF to collect data
             siteArraysDF.at[index, 'array_connections_status'] = connectionsStatus
         if connectionsStatus == "Warning":
             siteArraysDF.at[index, 'array_connections_status'] = connectionsStatus
-            connectionsHeading, warnConnectionsDF = format_arrayConnections(arrayName, connectionsHeading, connectionsDF)
+            connectionsHeading, warnConnectionsDF = format_arrayConnections(arrayName, purityVersion, connectionsHeading, connectionsDF)
 
             # Update Site Warnings DataFrame with new data
             warnSiteConnectionsDF = pd.concat([warnSiteConnectionsDF, warnConnectionsDF], ignore_index=True)
+
+            # Update Site Summary DataFrame with 'Warning'
+            connectedArraysStatus = sitesDF.loc[sitesDF['Site'] == site, 'Connected Arrays Status'].values[0]
+            if connectedArraysStatus != "Warning":
+                sitesDF.loc[sitesDF['Site'] == site, 'Connected Arrays Status'] = "Warning"
+                print(sitesDF)
         ### End Array Connection Information ###
 
         ### Get ActiveDR (async) Information ###
@@ -284,13 +384,16 @@ for site, arrays in arraysDF.items(): # Iterate through sitesDF to collect data
 
         ### Get ActiveCluster (sync) Information ###
         ### End ActiveCluster (sync) Information ###
-
+        
+        #warnSiteConnectionsDict[site] = connectionsDF
         print(siteArraysDF)
     
     #### Format DataFrames ####
     # Remove array, mgmt_ip and api_token columns from siteArraysDF
     siteArraysDF = siteArraysDF.drop(columns=['array', 'mgmt_ip', 'api_token'])
     print(siteArraysDF)
+
+    siteArraysDict[site] = siteArraysDF
 
     # Output Site Arrays to HTML
     arraysHeading = (f"{site} Arrays")
@@ -303,5 +406,16 @@ for site, arrays in arraysDF.items(): # Iterate through sitesDF to collect data
         connectionsHeadingStyle = 3
         make_html(connectionsHeading, connectionsHeadingStyle, warnSiteConnectionsDF)
 
+# Summarize Sites in HTML
+summaryHeading = "Summary (After Checks)"
+summaryHeadingStyle = 1
+make_html(summaryHeading, summaryHeadingStyle, sitesDF)
 
 end_html_body()
+
+for site, df in siteArraysDict.items():
+    print(f"Processed dataframe for {site}:\n", df)
+"""
+for site, df in warnSiteConnectionsDict.items():
+    print(f"Array Connection Warnings for {site}:\n", df)
+"""
