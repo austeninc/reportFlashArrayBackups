@@ -9,15 +9,14 @@ import requests.packages.urllib3 # type: ignore
 requests.packages.urllib3.disable_warnings() # Ignore SSL errors due to self-signed certs on Pure appliances
 
 #-------------------------------------------#
-#              Read Config JSON             #
+#              Read Config YAML             #
 #-------------------------------------------#
-
 def read_yaml(filePath):
     with open(filePath, 'r') as file:
         yamlData = yaml.safe_load(file)
     return yamlData
 #-------------------------------------------#
-#            End Config JSON Prep           #
+#            End Config YAML Prep           #
 #-------------------------------------------#
 
 #-------------------------------------------#

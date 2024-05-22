@@ -1,5 +1,5 @@
 sites:
-  Salt Lake City:
+  SLC:
     - array: SLC-305-FA06
       mgmt_ip: 10.235.116.230
       api_token: 26d6ca06-3496-6f9a-936e-5c88cd6ed359

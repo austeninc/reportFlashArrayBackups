@@ -3,390 +3,361 @@ from purestorage import FlashArray
 
 import pandas as pd
 
-import requests.packages.urllib3 # type: ignore
-requests.packages.urllib3.disable_warnings()
-
-#-------------------------------------------#
-#              Global Variables             #
-#-------------------------------------------#
-# Alert Codes Specific to Replication Function
-#-- Refer to Pure documentation for latest alert codes: https://support.purestorage.com/bundle/m_purityfa_alerts/page/FlashArray/PurityFA/topics/concept/c_purityfa_alerts.html
-replication_alert_codes = [13, 46, 50, 51, 52, 55, 76, 77, 78, 119, 120, 121, 122, 123, 140, 142, 143, 145, 151, 152, 154, 157, 177, 182, 192, 226, 233]
-
-# Define the custom order for 'current_severity'
-#-- This is reversed to allow for reverse sorting by date in later functions
-severity_order = ['info', 'warning', 'critical']
-
-#-------------------------------------------#
-#            End Global Variables           #
-#-------------------------------------------#
-
-#-------------------------------------------#
-#           Establish REST Session          #
-#-------------------------------------------#
-# Validate Connection & Output Info
-def establish_session():
-    print("\nFlashArray {} (version {}) REST session established!\n".format(array_info['array_name'], array_info['version']))
-    print(array_info, "\n")
-#-------------------------------------------#
-#       Done Establishing REST Session      #
-#-------------------------------------------#
-
-#-------------------------------------------#
-#             REST API Functions            #
-#-------------------------------------------#
-
-#------------ Alerting ------------#
-# List All Open Alerts
-def list_alerts(filtering=None):
-    heading = "All Open Alerts"
-
-    allAlerts = array.list_messages()
-
-    # Make DataFrame containing all open alerts
-    allAlertsDF = pd.DataFrame(allAlerts)
-
-    # Drop Unwanted Columns
-    allAlertsDF = allAlertsDF.drop(columns=['category', 'expected', 'actual'])
-
-    # Re-Order Columns
-    new_order = ['id', 'current_severity', 'opened', 'code', 'component_type', 'event', 'details']
-    allAlertsDF = allAlertsDF[new_order]
-
-    # Sort by Severity
-    allAlertsDF['current_severity'] = pd.Categorical(allAlertsDF['current_severity'], categories=severity_order, ordered=True)
-    allAlertsDF = allAlertsDF.sort_values(by=['current_severity', 'opened'], ascending=False)
-
-    # Rename ambiguous columns
-    allAlertsDF.rename(columns={'id': 'alert_id', 'code': 'alert_code', 'details': 'alert_details'}, inplace=True)
-
-    # Handling Output
-    if filtering is None:                       # Default: Provide no output and return unfiltered dataframe
-        #print("No request for All Alerts Output. Returning unformatted table of all alerts.\n\n")
-        return(allAlertsDF)
-    
-    else:                                       # If argument is provided [e.g. list_alerts(True)], then provide output for All Alerts and do nothing else
-        heading = "All Open Alerts"
-
-        # Format DataFrame
-        allAlertsOutputDF = update_dataframe(allAlertsDF)
-
-        # Make HTML
-        make_html(heading, allAlertsOutputDF)
-        
-        #print("\n", heading, "\n")
-        #print(allAlertsOutputDF)
-
-        return(heading, allAlertsOutputDF)      # Consider returning unfiltered table, too, just in case (this is not implemented)
-        
-# List all Replication Related Alerts
-def list_alertsReplication(allAlertsDF):
-    heading = 'Open Replication Alerts'
-
-    # Filter for Replication Alerts
-    replicationAlertsDF = allAlertsDF[allAlertsDF['alert_code'].isin(replication_alert_codes)]
-
-    # Format dataframe
-    replAlertsOutputDF = update_dataframe(replicationAlertsDF)
-
-    print("\n", heading, "\n")
-    print(replAlertsOutputDF)
-
-    return(heading, replAlertsOutputDF)
-
-# List all Critical Alerts
-def list_alertsCritical(allAlertsDF):
-    heading = "Open Critical Alerts"
-
-    # Filter for Critical Alerts
-    criticalAlertsDF = allAlertsDF[allAlertsDF['current_severity'] == 'critical']
-
-    # Format dataframe
-    critAlertsOutputDF = update_dataframe(criticalAlertsDF)
-
-    print("\n", heading, "\n")
-    print(critAlertsOutputDF)
-
-    return(heading, critAlertsOutputDF)
-#---------- End Alerting ----------#
-
-
-#-------- Array Connections -------#
-# List Array Connections
-## Return Formatted HTML code
-def list_arrayConnections():
-    heading = "Array Connections"
-
-    connections = array.list_array_connections()
-
-    connectionsDF = pd.DataFrame(connections)
-
-    # Specify the new column order
-    new_order = ['array_name', 'version', 'type', 'status', 'throttled', 'management_address', 'replication_address', 'id']
-
-    # Reorder the DataFrame columns
-    connectionsOutputDF = connectionsDF[new_order]
-
-    # Sort by Direction
-    connectionsOutputDF = connectionsOutputDF.sort_values(by=['status', 'array_name'], ascending=False)
-
-    # Rename 'array_name' to clearly be Remote
-    connectionsOutputDF = connectionsOutputDF.rename(columns={'array_name': 'remote_names'})
-
-    # Format DataFrame
-    connectionsOutputDF = update_dataframe(connectionsOutputDF)
-
-    make_html(heading, connectionsOutputDF)
-
-    return(heading, connectionsOutputDF)
-#------ End Array Connections -----#
-
-#----- ActiveDR (async) Status ----#
-# Get Replica Link Status
-## Return Formatted HTML code
-def get_replicaStatus():
-
-    heading = "Replica Link Status"
-
-    replicas = array.list_pod_replica_links()
-
-    replicasDF = pd.DataFrame(replicas)
-
-    # Specify the new column order
-    new_order = ['local_pod_name', 'direction', 'remote_names', 'remote_pod_name', 'status', 'recovery_point', 'lag']
-
-    # Reorder the DataFrame columns
-    replicasOutputDF = replicasDF[new_order]
-
-     # Sort by Direction
-    replicasOutputDF = replicasOutputDF.sort_values(by=['local_pod_name', 'direction'], ascending=True)
-
-    # Format DataFrame
-    replicasOutputDF = update_dataframe(replicasOutputDF)
-
-    make_html(heading, replicasOutputDF)
-
-    return(heading, replicasOutputDF)
-#------ End ActiveDR  Status ------#
-
-#--- ActiveCluster (sync) Status --#
-# List All Pods
-## Return Formatted HTML code
-def list_pods():
-    heading = "Active Cluster Pods"
-
-    pods = array.list_pods()
-
-    podsDF = pd.DataFrame(pods)
-
-    ####### Clean Up Output #########
-    # Filter out non-replicating pods
-    podsFilteredDF = podsDF[podsDF['arrays'].apply(len) > 1]
-
-    # Drop unwanted columns from Pods table
-    podsFilteredDF = podsFilteredDF.drop(columns=['link_source_count', 'link_target_count', 'requested_promotion_state', 'source'])
-
-    # Re-Order the Columns
-    new_order = ['name', 'promotion_status', 'arrays']
-    podsFilteredDF = podsFilteredDF[new_order]
-
-    # Explode the 'arrays' column
-    podsArrays = podsFilteredDF.explode('arrays').reset_index(drop=True)
-
-    # Normalize the exploded 'arrays' column
-    podsNormalizedArrays = pd.json_normalize(podsArrays['arrays'])
-
-    # Drop unwanted columns from normalized arrays
-    podsNormalizedArrays = podsNormalizedArrays.drop(columns=['pre_elected', 'frozen_at', 'progress', 'array_id'])
-
-    # Clean up column names to clearly state "array_name"
-    podsNormalizedArrays = podsNormalizedArrays.rename(columns={'name': 'array_name'})
-
-    # Add a 'pod_' prefix to column names for clarity
-    podsArrays = podsArrays.add_prefix('pod_')
-
-    # Repeat the rows in the original DataFrame to match the length of the exploded arrays
-    podsDuplicatedDF = podsArrays.drop(columns=['pod_arrays']).reset_index(drop=True)
-
-    # Concatenate the repeated rows with the normalized arrays
-    podsFilteredDF = pd.concat([podsDuplicatedDF, podsNormalizedArrays], axis=1)
-
-    # Replace duplicate data with empty strings
-    cols_to_check = ['pod_name', 'pod_promotion_status']
-    podsFilteredDF.loc[:, cols_to_check] = podsFilteredDF.loc[:, cols_to_check].mask(podsFilteredDF.loc[:, cols_to_check].duplicated(), '')
-    ###### Clean Up Complete ########
-
-
-    # Prep for HTML
-    podsOutputDF = update_dataframe(podsFilteredDF)
-
-    make_html(heading, podsOutputDF)
-
-    return(heading, podsOutputDF)
-#---- End ActiveCluster Status ----#
-
-#-------------------------------------------#
-#          End REST API Functions           #
-#-------------------------------------------#
-
-#-------------------------------------------#
-#      Functions to Format DataFrames       #
-#-------------------------------------------#
-# Rename Columns & Cells
-## Return updated DataFrame
-def update_dataframe(input):
-
-    df = input
-    df = df.copy()
-    
-    # Convert Timestamps to Human Readable
+import yaml
+import json
+
+import requests.packages.urllib3  # type: ignore
+requests.packages.urllib3.disable_warnings()  # Ignore SSL errors due to self-signed certs on Pure appliances
+
+# Set pandas display options to avoid scientific notation
+pd.set_option('display.float_format', '{:.0f}'.format)
+
+
+def read_yaml(filePath):
+    with open(filePath, 'r') as file:
+        yamlData = yaml.safe_load(file)
+    return yamlData
+
+
+def create_nested_dataframes(arrays):
+    capacity_data = [{'array': array['array'],
+                      'percent_full': array.get('percent_full', 'N/A'),
+                      'drr': array.get('drr', 'N/A'),
+                      'space_used': array.get('space_used', 'N/A'),
+                      'total_usable': array.get('total_usable', 'N/A')} for array in arrays]
+    connection_data = [{'array': array['array'],
+                        'connection_status': array.get('connection_status', 'N/A'),
+                        'connection_data': array.get('connection_data', 'N/A')} for array in arrays]
+    activeDR_data = [{'array': array['array'],
+                      'activeDR_status': array.get('activeDR_status', 'N/A'),
+                      'activeDR_data': array.get('activeDR_data', 'N/A')} for array in arrays]
+    activeCluster_data = [{'array': array['array'],
+                           'activeCluster_status': array.get('activeCluster_status', 'N/A'),
+                           'activeCluster_data': array.get('activeCluster_data', 'N/A')} for array in arrays]
+
+    capacity_df = pd.DataFrame(capacity_data)
+    connection_df = pd.DataFrame(connection_data)
+    activeDR_df = pd.DataFrame(activeDR_data)
+    activeCluster_df = pd.DataFrame(activeCluster_data)
+
+    return capacity_df, connection_df, activeDR_df, activeCluster_df
+
+
+def create_nested_connection_df(array_name):
+    additional_data = [{'local_array_name': f'local_array_name for {array_name}',
+                        'local_version': f'local_version for {array_name}',
+                        'status': f'status for {array_name}',
+                        'remote_names': f'remote_names for {array_name}',
+                        'remote_version': f'v for {array_name}',
+                        'type': f'type for {array_name}',
+                        'throttled': f'throttled for {array_name}',
+                        'management_address': f'management_address for {array_name}',
+                        'replication_address': f'replication_address for {array_name}'}]
+    additional_connection_df = pd.DataFrame(additional_data)
+    return additional_connection_df
+
+
+def create_nested_activeDR_df(array_name):
+    additional_data = [{'subfield1': f'subvalue1 for {array_name}', 'subfield2': f'subvalue2 for {array_name}'}]
+    additional_activeDR_df = pd.DataFrame(additional_data)
+    return additional_activeDR_df
+
+
+def create_nested_activeCluster_df(array_name):
+    additional_data = [{'subfield1': f'subvalue1 for {array_name}', 'subfield2': f'subvalue2 for {array_name}'}]
+    additional_activeCluster_df = pd.DataFrame(additional_data)
+    return additional_activeCluster_df
+
+
+def establish_session(mgmtIP, apiToken):
+    array = purestorage.FlashArray(mgmtIP, api_token=apiToken)
+    array_info = array.get()
+    return array, array_info
+
+
+def capacity_calculations(array_capacity_df):
+    array_consumed = array_capacity_df.at[0, 'total']
+    array_usable = array_capacity_df.at[0, 'capacity']
+    array_percent_full = array_consumed / array_usable * 100
+    array_drr = array_capacity_df.at[0, 'data_reduction']
+    return array_consumed, array_usable, array_percent_full, array_drr
+
+
+def update_capacity(arrays_df, capacity_df):
+    for index, row in arrays_df.iterrows():
+        # Connect
+        mgmtIP = row['mgmt_ip']
+        apiToken = row['api_token']
+        array, array_info = establish_session(mgmtIP, apiToken)
+        # Add local_version
+        local_version = array_info['version']
+        capacity_df['local_version'] = local_version
+        # Get Capacity Information
+        array_capacity = array.get(space=True)
+        array_capacity_df = pd.DataFrame(array_capacity)
+        array_consumed, array_usable, array_percent_full, array_drr = capacity_calculations(array_capacity_df)
+        capacity_df.at[index, 'percent_full'] = array_percent_full
+        capacity_df.at[index, 'drr'] = array_drr
+        capacity_df.at[index, 'space_used'] = array_consumed
+        capacity_df.at[index, 'total_usable'] = array_usable
+
+
+def update_connections(arrays_df, connections_df):
+    for index, row in arrays_df.iterrows():
+        # Connect
+        mgmtIP = row['mgmt_ip']
+        apiToken = row['api_token']
+        array, array_info = establish_session(mgmtIP, apiToken)
+        # Populate Local Purity Version
+        local_version = array_info['version']
+        connections_df['local_version'] = local_version
+        # Get Array Connections
+        array_connections_data = array.list_array_connections()
+        array_connections_df = pd.DataFrame(array_connections_data)
+        if array_connections_df.empty:
+            connections_df.at[index, 'connection_status'] = array_connections_data
+        elif (array_connections_df['status'] == 'conncted').all():
+            connections_df.at[index, 'connection_status'] = "Okay"
+            connections_df.at[index, 'connection_data'] = array_connections_data
+        else:
+            connections_df.at[index, 'connection_status'] = "Warning"
+            connections_df.at[index, 'connection_data'] = array_connections_data
+
+
+def update_activeDR(arrays_df, activeDR_df):
+    for index, row in arrays_df.iterrows():
+        # Connect
+        mgmtIP = row['mgmt_ip']
+        apiToken = row['api_token']
+        array, array_info = establish_session(mgmtIP, apiToken)
+        # Populate Local Purity Version
+        local_version = array_info['version']
+        activeDR_df['local_version'] = local_version
+        # Get ActiveDR Data
+        array_activeDR_data = array.list_pod_replica_links()
+        array_activeDR_df = pd.DataFrame(array_activeDR_data)
+        if array_activeDR_df.empty:
+            activeDR_df.at[index, 'activeDR_data'] = "N/A"
+        elif (array_activeDR_df['status'] == 'replicting').all():
+            activeDR_df.at[index, 'activeDR_status'] = "Okay"
+            activeDR_df.at[index, 'activeDR_data'] = array_activeDR_data
+        else:
+            activeDR_df.at[index, 'activeDR_status'] = "Warning"
+            activeDR_df.at[index, 'activeDR_data'] = array_activeDR_data
+
+
+def update_activeCluster(arrays_df, activeCluster_df):
+    for index, row in arrays_df.iterrows():
+        # Connect
+        mgmtIP = row['mgmt_ip']
+        apiToken = row['api_token']
+        array, array_info = establish_session(mgmtIP, apiToken)
+        # Populate Local Purity Version
+        local_version = array_info['version']
+        activeCluster_df['local_version'] = local_version
+        # Get Pods Data
+        array_podsAC_data = array.list_pods()
+        # Filter Pods for ActiveCluster members
+        array_activeCluster_data = [entry for entry in array_podsAC_data if len(entry['arrays']) > 1]
+        array_activeCluster_df = pd.DataFrame(array_activeCluster_data)
+        for idx, line in array_activeCluster_df.iterrows():
+            activeCluster_members_data = line['arrays']
+            activeCluster_members_df = pd.DataFrame(activeCluster_members_data)
+            if activeCluster_members_df.empty:
+                activeCluster_df.at[index, 'activeCluster_data'] = "N/A"
+            elif (activeCluster_members_df['status'] == 'online').all():
+                activeCluster_df.at[index, 'activeCluster_status'] = "Okay"
+                activeCluster_df.at[index, 'activeCluster_data'] = array_podsAC_data
+            else:
+                activeCluster_df.at[index, 'activeCluster_status'] = "Warning"
+                activeCluster_df.at[index, 'activeCluster_data'] = array_podsAC_data
+
+
+def update_site_summary_status(site, summary_df, site_status_column, nested_status_column, nested_status_df):
+    status = "Okay"
+    if (nested_status_df[nested_status_column] == "Warning").any():
+        status = "Warning"
+    summary_df.loc[summary_df['site'] == site, site_status_column] = status
+    return status
+
+def remove_null_rows(nested_data_column, nested_df):
+
+    # drop all rows that contain 'N/A'
+    nested_clean_df = nested_df.drop(nested_df[nested_df[nested_data_column] == 'N/A'].index)
+
+    return nested_clean_df
+
+def explode_data(nested_data_column, nested_status_column, nested_df):
+
+    # Explode the nested data column
+    exploded_data = nested_df.explode(nested_data_column).reset_index(drop=True)
+
+    # Normalize the exploded data to flatten the nested JSON objects
+    normalized_data = pd.json_normalize(exploded_data[nested_data_column])
+
+    # Clean up column names to clearly state "remote_array"
+    normalized_data = normalized_data.rename(columns={'array_name': 'remote_array', 'version': 'remote_version'})
+
+    # Drop the nested columns from the exploded DataFrame
+    exploded_data = exploded_data.drop(columns=[nested_data_column, nested_status_column])
+
+    # Concatenate the normalized data with the exploded data
+    merged_nested_df = pd.concat([normalized_data, exploded_data], axis=1)
+
+    return merged_nested_df
+
+def explode_activeCluster_arrays(formatted_activeCluster_df):
+    # Explode the nested data column
+    exploded_arrays = formatted_activeCluster_df.explode('arrays').reset_index(drop=True)
+
+    # Normalize the exploded data
+    normalized_arrays = pd.json_normalize(exploded_arrays['arrays'])
+
+    # Drop the nested columns from the exploded dataframe
+    exploded_arrays = exploded_arrays.drop(columns=['arrays'])
+
+    # Concatenate the normalized data with the exploded data
+    merged_df = pd.concat([normalized_arrays, exploded_arrays], axis=1)
+
+    # Clean up duplicate array names
+    cols_to_check = ['local_array', 'local_version', 'pod_name', 'promotion_status']
+    merged_df.loc[:, cols_to_check] = merged_df.loc[:, cols_to_check].mask(merged_df.loc[:, cols_to_check].duplicated(), '')
+
+    return merged_df
+
+def format_dataframe(input_type, input_df):
+    df = input_df
+    #df = df.copy()
+
+    # Perform Actions based on Input Type
+    if input_type == "connection":
+        # Re-Order Columns
+        new_order = ['array', 'local_version', 'status', 'remote_array', 'remote_version', 'type', 'throttled', 'management_address', 'replication_address', 'id']
+        df = df[new_order]
+
+        # Clean Up Columns
+        df = df.drop(columns=['id']).reset_index(drop=True)
+        df = df.rename(columns={'array': 'local_array'})
+
+        # Sort by Direction
+        df = df.sort_values(by=['status', 'remote_array'], ascending=False)
+
+    if input_type == "activeDR":
+        # Clean Up Columns
+        df = df.drop(columns=['local_version']).reset_index(drop=True)
+        df = df.rename(columns={'array': 'local_array'})
+
+        # Re-Order Columns
+        new_order = ['local_array', 'local_pod_name', 'direction', 'remote_names', 'remote_pod_name', 'status', 'recovery_point', 'lag']
+        df = df[new_order]
+
+        # Sort by Direction
+        df = df.sort_values(by=['local_pod_name', 'direction'], ascending=True)
+
+    if input_type == "activeCluster":
+        # Clean Up Columns
+        df = df.drop(columns=['requested_promotion_state', 'link_target_count', 'link_source_count', 'source']).reset_index(drop=True)
+        df = df.rename(columns={'array': 'local_array', 'name': 'pod_name'})
+
+        df = explode_activeCluster_arrays(df)
+
+        # Re-Order Columns
+        new_order = ['local_array', 'local_version', 'pod_name', 'promotion_status', 'name', 'status', 'mediator_status', 'pre_elected', 'frozen_at']
+        df = df[new_order]
+
+        # Drop More Columns
+        df = df.drop(columns=['pre_elected', 'local_version'])
+
+    # Convert UNIX Timestamps to Human Readable
     if 'recovery_point' in df:
         df['recovery_point'] = pd.to_datetime(df['recovery_point'], unit='ms', utc=True)    # Assume UTC source
         df['recovery_point'] = df['recovery_point'].dt.tz_convert('America/Los_Angeles')    # Assume convert to Pacific time
         df['recovery_point'] = df['recovery_point'].dt.strftime('%Y-%m-%d %H:%M:%S %Z')     # Make human readable
+    if 'frozen_at' in df:
+        df['frozen_at'] = pd.to_datetime(df['frozen_at'], unit='ms', utc=True)    # Assume UTC source
+        df['frozen_at'] = df['frozen_at'].dt.tz_convert('America/Los_Angeles')    # Assume convert to Pacific time
+        df['frozen_at'] = df['frozen_at'].dt.strftime('%Y-%m-%d %H:%M:%S %Z')     # Make human readable
 
     # Convert Lag Time ms to seconds
+    if 'lag' in df:
+        df['lag'] = pd.to_numeric(df['lag']) / 1000
 
-    # Convert Alert opened Timestamps to standard format
-    ################################# Note #######################################
-    ### Need to know ARRAY LOCAL TIMEZONE to allow for tz conversion & display ###
-    ################################# Note #######################################
-    if 'opened' in df:
-        df['opened'] = pd.to_datetime(df['opened'], format='%Y-%m-%dT%H:%M:%SZ') #.dt.tz_localize('UTC')
-        #df['opened'] = df['opened'].dt.tz_convert('America/Los_Angeles')
-        df['opened'] = df['opened'].dt.strftime('%Y-%m-%d %H:%M:%S %Z')
+    print(df)
 
+    return df
 
-    # Replace Column Titles with Human-Readable (Dictionary)
-    df.rename(columns={'version': 'Version',
-                     'throttled': 'Throttled',
-                     'status': 'Status',
-                     'management_address': 'Management IP',
-                     'id': 'Array ID',
-                     'array_name': 'Array',
-                     'replication_address': 'Replication IP',
-                     'type': 'Replication Type',
-                     'local_pod_name': 'Local Pod',
-                     'remote_names': 'Remote Array',
-                     'remote_pod_name': 'Remote Pod',
-                     'recovery_point': 'Recovery Point',
-                     'direction': 'Direction',
-                     'lag': 'Lag',
-                     'pod_name': 'Pod',
-                     'pod_source': 'Source',
-                     'pod_promotion_status': 'Promotion Status',
-                     'mediator_status': 'Mediator Status',
-                     'alert_id': 'Alert ID',
-                     'current_severity': 'Severity',
-                     'opened': 'Opened',
-                     'alert_code': 'Alert Code',
-                     'component_type': 'Component',
-                     'event': 'Event',
-                     'alert_details': 'Details'
-                    }, inplace=True)
-    
-    # Replace 'Engineer' with 'Software Engineer' in the 'Occupation' column
-    df = df.replace({'replicating': 'Replicating',
-                    'outbound': '\N{RIGHTWARDS ARROW}',
-                    'inbound': '\N{LEFTWARDS ARROW}'
-                    })
+def main():
+    configYAML = "config.yaml"
+    yamlData = read_yaml(configYAML)
 
-    return(df)
-#-------------------------------------------#
-#        Done Formatting DataFrames         #
-#-------------------------------------------#
+    siteSummary = pd.DataFrame({'site': list(yamlData['sites'].keys())})
 
-#-------------------------------------------#
-#            Prepare HTML Output            #
-#-------------------------------------------#
-# Convert DataFrame to HTML
-def make_html(heading, dataframe):
-    dataFrameHTML = dataframe.to_html(index=False)
+    site_arrays_dfs = {}
+    nested_site_dfs = {}
 
-    headingHTML = "<h2>" + heading + "</h2>\n\n"
-    
-    heading, htmlOutput = format_table(headingHTML, dataFrameHTML)
+    for site, arrays in yamlData['sites'].items():
+        arrays_df = pd.DataFrame(arrays)
+        site_arrays_dfs[site] = arrays_df
+        capacity_df, connection_df, activeDR_df, activeCluster_df = create_nested_dataframes(arrays)
+        nested_site_dfs[site] = {
+            'arrays': arrays_df,
+            'capacity': capacity_df,
+            'connection_status': connection_df,
+            'activeDR_status': activeDR_df,
+            'activeCluster_status': activeCluster_df
+        }
 
-    write_html(heading, htmlOutput)
+    for site, dfs in nested_site_dfs.items():
+        update_capacity(dfs['arrays'], dfs['capacity'])
+        update_connections(dfs['arrays'], dfs['connection_status'])
+        update_activeDR(dfs['arrays'], dfs['activeDR_status'])
+        update_activeCluster(dfs['arrays'], dfs['activeCluster_status'])
 
-    return(heading, htmlOutput)
+    siteSummary['site_connections_status'] = "N/A"
+    siteSummary['site_activeDR_status'] = "N/A"
+    siteSummary['site_activeCluster_status'] = "N/A"
 
-# Format any HTML table
-def format_table(heading, htmlInput):
-
-    headingHTML = heading.replace('<h2>',
-                                    '\n<h2 style="color: white; width: 100%; font-family: Arial, sans-serif; font-size: 1.25em;">')
-
-    html = htmlInput.replace('<table border="1" class="dataframe">',
-                                '<table style="border-collapse: collapse; width: 100%; font-family: Arial, sans-serif;">')
-    html = html.replace('<thead>',
-                            '<thead style="color: white; border-bottom: 3px solid #FE5000;">')
-    html = html.replace('<th>',
-                            '<th style="color:white; border-bottom: 1px solid #FE5000; text-align: left; padding: 8px;">')
-    html = html.replace('<td>',
-                            '<td style="color:white; border-bottom: 1px solid #DADADA; text-align: left; padding: 8px;">')
-    #html = html.replace('<tr>',
-    #                        '<tr style="background-color: #6C6C6C;">')
-    html = html.replace('<tr>',
-                            '<tr style="color:white; background-color: #1C1C1C;">')
-    html = html.replace('</table>',
-                            '</table>\n')
-
-    #print(htmlInput)
-    return(headingHTML, html)
-#-------------------------------------------#
-#        Done Preparing HTML Output         #
-#-------------------------------------------#
-
-#-------------------------------------------#
-#            Write HTML to File             #
-#-------------------------------------------#
-# Write output to HTML file
-## Create the file
-def start_html_body():
-    with open('test_output.html', 'w') as f:
-        f.write("<body style=\"background-color: #1C1C1C; padding-top: 2vh; padding-left: 7vw; padding-right: 8vw;\">\n")
-        f.write("<img src='assets/pstg_logo_darkMode.svg' width=250 /><br /><br />")
-
-## Add tables to HTML
-def write_html(title, html):
-    with open('test_output.html', 'a') as f:
-        f.writelines(title)
-        f.writelines(html)
-        f.writelines('</br></br>')
-
-## Close the file with ending body tag
-def end_html_body():
-    with open('test_output.html', 'a') as f:
-        f.writelines("\n</body>")
-#-------------------------------------------#
-#          Done Writing HTML File           #
-#-------------------------------------------#
-
-#############################################
-##-----------------------------------------##
-##               Run Program               ##
-##-----------------------------------------##
-#############################################
-
-# Initialize Array
-array = purestorage.FlashArray("10.235.116.230", api_token="26d6ca06-3496-6f9a-936e-5c88cd6ed359")
-array_info = array.get()
-
-establish_session()
-
-# Initialize HTML file
-start_html_body()
-
-# Compile Data
-list_arrayConnections() # Array Connections
-get_replicaStatus()     # Replica Link Status (ActiveDR)
-list_pods()             # List replicating pods (ActiveCluster)
+    for site, dfs in nested_site_dfs.items():
+        siteConnectionStatus = update_site_summary_status(site, siteSummary, 'site_connections_status', 'connection_status', dfs['connection_status'])
+        siteActiveDRStatus = update_site_summary_status(site, siteSummary, 'site_activeDR_status', 'activeDR_status', dfs['activeDR_status'])
+        siteActiveClusterStatus = update_site_summary_status(site, siteSummary, 'site_activeCluster_status', 'activeCluster_status',dfs['activeCluster_status'])
 
 
-# Complete the HTML file
-end_html_body()
+    print("Summary:")
+    print(siteSummary)
 
+    for site, dfs in nested_site_dfs.items():
+        # Get statuses
+        siteConnectionStatus = update_site_summary_status(site, siteSummary, 'site_connections_status', 'connection_status', dfs['connection_status'])
+        siteActiveDRStatus = update_site_summary_status(site, siteSummary, 'site_activeDR_status', 'activeDR_status', dfs['activeDR_status'])
+        siteActiveClusterStatus = update_site_summary_status(site, siteSummary, 'site_activeCluster_status', 'activeCluster_status',dfs['activeCluster_status'])
 
+        # Clean up dataframes
+        clean_connection_df = remove_null_rows('connection_data', dfs['connection_status'])
+        clean_activeDR_df = remove_null_rows('activeDR_data', dfs['activeDR_status'])
+        clean_activeCluster_df = remove_null_rows('activeCluster_data', dfs['activeCluster_status'])
 
-##### If Mediator is unhealthy: https://support.purestorage.com/bundle/m_activecluster/page/FlashArray/PurityFA/Replication/ActiveCluster/Troubleshooting/topics/concept/c_impact_312.html
+        # Explode data contents
+        connection_detail_df = explode_data('connection_data', 'connection_status', clean_connection_df)
+        activeDR_detail_df = explode_data('activeDR_data', 'activeDR_status', clean_activeDR_df)
+        activeCluster_detail_df = explode_data('activeCluster_data', 'activeCluster_status', clean_activeCluster_df)
+
+        if connection_detail_df.empty == False:
+            connection_report_df = format_dataframe('connection', connection_detail_df)
+        if activeDR_detail_df.empty == False:
+            activeDR_report_df = format_dataframe('activeDR', activeDR_detail_df)
+        if activeCluster_detail_df.empty == False:
+            activeCluster_report_df = format_dataframe('activeCluster', activeCluster_detail_df)
+
+        if siteConnectionStatus == "Warning":
+            print(f"Report: {site} Connected Arrays:\n")
+            print(connection_report_df)
+        if siteActiveDRStatus == "Warning":
+            print(f"Report: {site} ActiveDR (async) Status:\n")
+            print(activeDR_report_df)
+        if siteActiveClusterStatus == "Warning":
+            print(f"Report: {site} ActiveCluster (sync) Status:\n")
+            print(activeCluster_report_df)
+
+if __name__ == "__main__":
+    main()
