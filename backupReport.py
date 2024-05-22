@@ -4,7 +4,6 @@ from purestorage import FlashArray
 import pandas as pd
 
 import yaml
-import json
 
 import requests.packages.urllib3  # type: ignore
 requests.packages.urllib3.disable_warnings()  # Ignore SSL errors due to self-signed certs on Pure appliances
@@ -281,6 +280,46 @@ def format_dataframe(input_type, input_df):
     # Convert Lag Time ms to seconds
     if 'lag' in df:
         df['lag'] = pd.to_numeric(df['lag']) / 1000
+
+    # Replace Column Titles with Human-Readable (Dictionary)
+    df.rename(columns={'version': 'Purity Version',
+                       'local_version': 'Local Purity Version',
+                       'remote_version': 'Remote Purity Version',
+                     'throttled': 'Throttled',
+                     'status': 'Status',
+                     'management_address': 'Management IP',
+                     'id': 'Array ID',
+                     'array_name': 'Array',
+                     'local_array': 'Local Array',
+                     'name': 'Member Arrays',
+                     'replication_address': 'Replication IP',
+                     'type': 'Replication Type',
+                     'local_pod_name': 'Local Pod',
+                     'remote_names': 'Remote Array',
+                     'remote_array': 'Remote Array',
+                     'remote_pod_name': 'Remote Pod',
+                     'recovery_point': 'Recovery Point',
+                     'direction': 'Direction',
+                     'lag': 'Lag (seconds)',
+                     'frozen_at': 'Stuck Since',
+                     'pod_name': 'Pod',
+                     'pod_source': 'Source',
+                     'promotion_status': 'Promotion Status',
+                     'mediator_status': 'Mediator Status',
+                     'alert_id': 'Alert ID',
+                     'current_severity': 'Severity',
+                     'opened': 'Opened',
+                     'alert_code': 'Alert Code',
+                     'component_type': 'Component',
+                     'event': 'Event',
+                     'alert_details': 'Details'
+                    }, inplace=True)
+    
+    # Replace contents of cells in columns
+    df = df.replace({'replicating': 'Replicating',
+                    'outbound': '\N{RIGHTWARDS ARROW}',
+                    'inbound': '\N{LEFTWARDS ARROW}'
+                    })
 
     print(df)
 
