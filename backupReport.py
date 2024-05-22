@@ -334,7 +334,7 @@ def format_dataframe(input_type, input_df):
                      'recovery_point': 'Recovery Point',
                      'direction': 'Direction',
                      'lag': 'Lag (seconds)',
-                     'frozen_at': 'Stuck Since',
+                     'frozen_at': 'Frozen Since',
                      'pod_name': 'Pod',
                      'pod_source': 'Source',
                      'promotion_status': 'Promotion Status',
@@ -354,9 +354,19 @@ def format_dataframe(input_type, input_df):
                     }, inplace=True)
     
     # Replace contents of cells in columns
-    df = df.replace({'replicating': 'Replicating',
+    df = df.replace({'replicating': '\N{Large Green Circle} Replicating',
+                     'Okay': '\N{Large Green Circle} Okay',
                     'outbound': '\N{RIGHTWARDS ARROW}',
-                    'inbound': '\N{LEFTWARDS ARROW}'
+                    'inbound': '\N{LEFTWARDS ARROW}',
+                    'Warning': '\N{Large Yellow Circle} Warning',
+                    'paused': '\N{Large Yellow Circle} Paused',
+                    'unhealthy': '\N{Large Red Circle} Unhealthy',
+                    'online': '\N{Large Green Circle} online',
+                    'unknown': '\N{Heavy Large Circle} unknown',
+                    'offline': '\N{Large Red Circle} offline',
+                    'flummoxed': '\N{Large Yellow Circle} flummoxed',
+                    'unreachable': '\N{Large Red Circle} unreachable',
+                    'resyncing': '\N{Large Blue Circle} resyncing'
                     })
 
     print(df)
@@ -507,7 +517,7 @@ def main():
         make_html(heading, 2, site_capacity_df)
         insert_space_html()
 
-    insert_divider_html()
+    #insert_divider_html()
 
 
     for site, dfs in nested_site_dfs.items():
@@ -528,6 +538,8 @@ def main():
 
         # If site is flagged for issues, produce Site Problem Report header
         if (siteConnectionStatus == "Warning") | (siteActiveDRStatus == "Warning") | (siteActiveClusterStatus == "Warning"):
+            insert_space_html()
+            insert_divider_html()
             heading = f"{site}: Detailed Status Report"
             headingHTML = "<br /><h1 style=\"color: white; width: 100%; font-family: Arial, sans-serif; font-size: 1.25em;\">" + heading + "</h1>"
             html = ""
@@ -555,10 +567,6 @@ def main():
             print(activeCluster_report_df)
             heading = f"Warning: {site}: ActiveCluster (sync) Status"
             make_html(heading, 2, activeCluster_report_df)
-
-        if (siteConnectionStatus == "Warning") | (siteActiveDRStatus == "Warning") | (siteActiveClusterStatus == "Warning"):
-            insert_space_html()
-            insert_divider_html()
 
     # Complete the HTML file
     end_html_body()
