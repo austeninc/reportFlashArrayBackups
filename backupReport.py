@@ -4,12 +4,13 @@ from purestorage import FlashArray
 import pandas as pd
 
 import yaml
+import math
 
 import requests.packages.urllib3  # type: ignore
 requests.packages.urllib3.disable_warnings()  # Ignore SSL errors due to self-signed certs on Pure appliances
 
 # Set pandas display options to avoid scientific notation
-pd.set_option('display.float_format', '{:.0f}'.format)
+pd.set_option('display.float_format', '{:,.2f}'.format)
 
 
 def read_yaml(filePath):
@@ -23,6 +24,7 @@ def create_nested_dataframes(arrays):
                       'percent_full': array.get('percent_full', 'N/A'),
                       'drr': array.get('drr', 'N/A'),
                       'space_used': array.get('space_used', 'N/A'),
+                      'space_remaining': array.get('space_remaining', 'N/A'),
                       'total_usable': array.get('total_usable', 'N/A')} for array in arrays]
     connection_data = [{'array': array['array'],
                         'connection_status': array.get('connection_status', 'N/A'),
@@ -73,13 +75,27 @@ def establish_session(mgmtIP, apiToken):
     array_info = array.get()
     return array, array_info
 
+def convert_capacity(size_bytes):
+   if size_bytes == 0:
+       return "0B"
+   size_name = ("B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB")
+   i = int(math.floor(math.log(size_bytes, 1024)))
+   p = math.pow(1024, i)
+   s = round(size_bytes / p, 2)
+   size_output = f"{s} {size_name[i]}"
+   return size_output
+
 
 def capacity_calculations(array_capacity_df):
     array_consumed = array_capacity_df.at[0, 'total']
     array_usable = array_capacity_df.at[0, 'capacity']
     array_percent_full = array_consumed / array_usable * 100
+    array_space_remaining = array_usable - array_consumed
+    array_consumed = convert_capacity(array_consumed)
+    array_usable = convert_capacity(array_usable)
+    array_space_remaining = convert_capacity(array_space_remaining)
     array_drr = array_capacity_df.at[0, 'data_reduction']
-    return array_consumed, array_usable, array_percent_full, array_drr
+    return array_consumed, array_usable, array_percent_full, array_drr, array_space_remaining
 
 
 def update_capacity(arrays_df, capacity_df):
@@ -94,11 +110,15 @@ def update_capacity(arrays_df, capacity_df):
         # Get Capacity Information
         array_capacity = array.get(space=True)
         array_capacity_df = pd.DataFrame(array_capacity)
-        array_consumed, array_usable, array_percent_full, array_drr = capacity_calculations(array_capacity_df)
-        capacity_df.at[index, 'percent_full'] = array_percent_full
-        capacity_df.at[index, 'drr'] = array_drr
+        array_consumed, array_usable, array_percent_full, array_drr, array_space_remaining = capacity_calculations(array_capacity_df)
+        array_percent_full = str(round(array_percent_full, 2))
+        array_drr = str(round(array_drr, 1))
+        capacity_df.at[index, 'percent_full'] = f"{array_percent_full}%"
+        capacity_df.at[index, 'drr'] = f"{array_drr}:1"
         capacity_df.at[index, 'space_used'] = array_consumed
         capacity_df.at[index, 'total_usable'] = array_usable
+        capacity_df.at[index, 'space_remaining'] = array_space_remaining
+    return capacity_df
 
 
 def update_connections(arrays_df, connections_df):
@@ -115,7 +135,7 @@ def update_connections(arrays_df, connections_df):
         array_connections_df = pd.DataFrame(array_connections_data)
         if array_connections_df.empty:
             connections_df.at[index, 'connection_status'] = array_connections_data
-        elif (array_connections_df['status'] == 'conncted').all():
+        elif (array_connections_df['status'] == 'connected').all():
             connections_df.at[index, 'connection_status'] = "Okay"
             connections_df.at[index, 'connection_data'] = array_connections_data
         else:
@@ -229,6 +249,14 @@ def format_dataframe(input_type, input_df):
     #df = df.copy()
 
     # Perform Actions based on Input Type
+    if input_type == "capacity":
+        # Re-Order Columns:
+        new_order = ['array', 'local_version', 'drr', 'percent_full', 'space_used', 'space_remaining', 'total_usable']
+        df = df[new_order]
+
+        # Clean Up Columns
+        df = df.rename(columns={'local_version': 'version'})
+
     if input_type == "connection":
         # Re-Order Columns
         new_order = ['array', 'local_version', 'status', 'remote_array', 'remote_version', 'type', 'throttled', 'management_address', 'replication_address', 'id']
@@ -282,7 +310,11 @@ def format_dataframe(input_type, input_df):
         df['lag'] = pd.to_numeric(df['lag']) / 1000
 
     # Replace Column Titles with Human-Readable (Dictionary)
-    df.rename(columns={'version': 'Purity Version',
+    df.rename(columns={'site': 'Site Name',
+                       'site_connections_status': 'Array Connections',
+                       'site_activeDR_status': 'ActiveDR (async) Status',
+                       'site_activeCluster_status': 'ActiveCluster (sync) Status',
+                       'version': 'Purity Version',
                        'local_version': 'Local Purity Version',
                        'remote_version': 'Remote Purity Version',
                      'throttled': 'Throttled',
@@ -290,6 +322,7 @@ def format_dataframe(input_type, input_df):
                      'management_address': 'Management IP',
                      'id': 'Array ID',
                      'array_name': 'Array',
+                     'array': 'Array',
                      'local_array': 'Local Array',
                      'name': 'Member Arrays',
                      'replication_address': 'Replication IP',
@@ -312,7 +345,12 @@ def format_dataframe(input_type, input_df):
                      'alert_code': 'Alert Code',
                      'component_type': 'Component',
                      'event': 'Event',
-                     'alert_details': 'Details'
+                     'alert_details': 'Details',
+                     'percent_full': 'Percent Full',
+                     'space_used': 'Used',
+                     'space_remaining': 'Available',
+                     'total_usable': 'Total Usable',
+                     'drr': 'DRR'
                     }, inplace=True)
     
     # Replace contents of cells in columns
@@ -324,6 +362,92 @@ def format_dataframe(input_type, input_df):
     print(df)
 
     return df
+
+#-------------------------------------------#
+#            Prepare HTML Output            #
+#-------------------------------------------#
+# Convert DataFrame to HTML
+def make_html(heading, headingStyle, dataframe):
+    dataFrameHTML = dataframe.to_html(index=False)
+    
+    if headingStyle == 1:
+        headingHTML = "<h1>" + heading + "</h1>\n\n"
+    else:
+        headingHTML = "<h2>" + heading + "</h2>\n\n"
+    
+    heading, htmlOutput = format_table(headingHTML, headingStyle, dataFrameHTML)
+
+    write_html(heading, htmlOutput)
+
+    return(heading, htmlOutput)
+
+# Format any HTML table
+def format_table(heading, headingStyle, htmlInput):
+
+    if headingStyle == 1:
+        headingHTML = heading.replace('<h1>',
+                                        '\n<h1 style="color: white; width: 100%; font-family: Arial, sans-serif; font-size: 1.5em;">')
+    else:
+        headingHTML = heading.replace('<h2>',
+                                        '\n<h2 style="color: white; width: 100%; font-family: Arial, sans-serif; font-size: 1em;">')
+
+    html = htmlInput.replace('<table border="1" class="dataframe">',
+                                '<table style="border-collapse: collapse; width: 100%; font-family: Arial, sans-serif;">')
+    html = html.replace('<thead>',
+                            '<thead style="color: white; border-bottom: 3px solid #FE5000;">')
+    html = html.replace('<th>',
+                            '<th style="color:white; border-bottom: 1px solid #FE5000; text-align: left; padding: 8px;">')
+    html = html.replace('<td>',
+                            '<td style="color:white; border-bottom: 1px solid #DADADA; text-align: left; padding: 8px;">')
+    #html = html.replace('<tr>',
+    #                        '<tr style="background-color: #6C6C6C;">')
+    html = html.replace('<tr>',
+                            '<tr style="color:white; background-color: #1C1C1C;">')
+    html = html.replace('</table>',
+                            '</table>\n')
+
+    #print(htmlInput)
+    return(headingHTML, html)
+#-------------------------------------------#
+#        Done Preparing HTML Output         #
+#-------------------------------------------#
+
+#-------------------------------------------#
+#            Write HTML to File             #
+#-------------------------------------------#
+# Write output to HTML file
+## Create the file
+def start_html_body():
+    with open('test_clean_output.html', 'w') as f:
+        f.write("<body style=\"background-color: #1C1C1C; padding-top: 2vh; padding-left: 7vw; padding-right: 8vw;\">\n")
+        f.write("<img src='assets/pstg_logo_darkMode.svg' width=250 /><br /><br />")
+
+## Add tables to HTML
+def write_html(title, html):
+    with open('test_clean_output.html', 'a') as f:
+        #f.writelines('</br>')
+        f.writelines(title)
+        f.writelines(html)
+
+## Quickly add break <br /> tag
+def insert_space_html():
+    with open('test_clean_output.html', 'a') as f:
+        f.writelines("\n<br />")
+
+def insert_divider_html():
+    with open('test_clean_output.html', 'a') as f:
+        f.writelines("\n<hr style=\"height:1px;border-width:0;width:31%;color:#FE5000;background-color:#FFFFFF\">")
+        f.writelines("\n<hr style=\"height:2px;border-width:0;width:49%;color:#FE5000;background-color:#FE5000\">")
+        f.writelines("\n<hr style=\"height:1px;border-width:0;width:31%;color:#FE5000;background-color:#FFFFFF\">")
+
+## Close the file with ending body tag
+def end_html_body():
+    with open('test_clean_output.html', 'a') as f:
+        f.writelines("\n<br /><br />")
+        f.writelines("\n</body>")
+#-------------------------------------------#
+#          Done Writing HTML File           #
+#-------------------------------------------#
 
 def main():
     configYAML = "config.yaml"
@@ -361,9 +485,30 @@ def main():
         siteActiveDRStatus = update_site_summary_status(site, siteSummary, 'site_activeDR_status', 'activeDR_status', dfs['activeDR_status'])
         siteActiveClusterStatus = update_site_summary_status(site, siteSummary, 'site_activeCluster_status', 'activeCluster_status',dfs['activeCluster_status'])
 
+    # Initialize HTML file
+    start_html_body()
 
+    # Output Summary
+    siteSummary_copy = siteSummary.copy()
+    siteSummary_copy = format_dataframe('summary', siteSummary_copy)
     print("Summary:")
-    print(siteSummary)
+    print(siteSummary_copy)
+
+    heading = "Summary"
+    make_html(heading, 1, siteSummary_copy)
+    insert_space_html()
+
+    for site, dfs in nested_site_dfs.items():
+        site_capacity_df = update_capacity(dfs['arrays'], dfs['capacity'])
+        site_capacity_df = format_dataframe('capacity', site_capacity_df)
+        print(f"{site}: Array Capacity\n")
+        print(site_capacity_df)
+        heading = f"{site}: Arrays"
+        make_html(heading, 2, site_capacity_df)
+        insert_space_html()
+
+    insert_divider_html()
+
 
     for site, dfs in nested_site_dfs.items():
         # Get statuses
@@ -381,6 +526,13 @@ def main():
         activeDR_detail_df = explode_data('activeDR_data', 'activeDR_status', clean_activeDR_df)
         activeCluster_detail_df = explode_data('activeCluster_data', 'activeCluster_status', clean_activeCluster_df)
 
+        # If site is flagged for issues, produce Site Problem Report header
+        if (siteConnectionStatus == "Warning") | (siteActiveDRStatus == "Warning") | (siteActiveClusterStatus == "Warning"):
+            heading = f"{site}: Detailed Status Report"
+            headingHTML = "<br /><h1 style=\"color: white; width: 100%; font-family: Arial, sans-serif; font-size: 1.25em;\">" + heading + "</h1>"
+            html = ""
+            write_html(headingHTML, html)
+
         if connection_detail_df.empty == False:
             connection_report_df = format_dataframe('connection', connection_detail_df)
         if activeDR_detail_df.empty == False:
@@ -389,14 +541,27 @@ def main():
             activeCluster_report_df = format_dataframe('activeCluster', activeCluster_detail_df)
 
         if siteConnectionStatus == "Warning":
-            print(f"Report: {site} Connected Arrays:\n")
+            print(f"\n\nReport: {site} Connected Arrays:\n")
             print(connection_report_df)
+            heading = f"Warning: {site}: Array Connections"
+            make_html(heading, 2, connection_report_df)
         if siteActiveDRStatus == "Warning":
-            print(f"Report: {site} ActiveDR (async) Status:\n")
+            print(f"\n\nReport: {site} ActiveDR (async) Status:\n")
             print(activeDR_report_df)
+            heading = f"Warning: {site}: ActiveDR (async) Status"
+            make_html(heading, 2, activeDR_report_df)
         if siteActiveClusterStatus == "Warning":
-            print(f"Report: {site} ActiveCluster (sync) Status:\n")
+            print(f"\n\nReport: {site} ActiveCluster (sync) Status:\n")
             print(activeCluster_report_df)
+            heading = f"Warning: {site}: ActiveCluster (sync) Status"
+            make_html(heading, 2, activeCluster_report_df)
+
+        if (siteConnectionStatus == "Warning") | (siteActiveDRStatus == "Warning") | (siteActiveClusterStatus == "Warning"):
+            insert_space_html()
+            insert_divider_html()
+
+    # Complete the HTML file
+    end_html_body()
 
 if __name__ == "__main__":
     main()
