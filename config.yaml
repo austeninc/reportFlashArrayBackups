@@ -19,3 +19,7 @@ sites:
     - array: sjc-128-fa02
       mgmt_ip: 10.210.108.193
       api_token: 320918e8-94c4-be64-9d34-a33109af03c8
+  Lehi:
+    - array: slc-507-fa01
+      mgmt_ip: 10.235.118.15
+      api_token: 9f4667a4-5f91-d24e-fd50-b53faa1df127

@@ -157,7 +157,7 @@ def update_activeDR(arrays_df, activeDR_df):
         array_activeDR_df = pd.DataFrame(array_activeDR_data)
         if array_activeDR_df.empty:
             activeDR_df.at[index, 'activeDR_data'] = "N/A"
-        elif (array_activeDR_df['status'] == 'replicting').all():
+        elif (array_activeDR_df['status'] == 'replicating').all():
             activeDR_df.at[index, 'activeDR_status'] = "Okay"
             activeDR_df.at[index, 'activeDR_data'] = array_activeDR_data
         else:
