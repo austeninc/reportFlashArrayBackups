@@ -1,2 +1,7 @@
 .DS_Store
-sendEmail_test.py
+config.json
+old_no_use_backupReport.py
+old_no_use_backupSites.py
+testDataFrames.py
+test_output.html
+test_sites_output.html
