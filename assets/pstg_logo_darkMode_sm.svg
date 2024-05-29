@@ -1,36 +1,15 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!-- Created with Inkscape (http://www.inkscape.org/) -->
 
-<svg
-   version="1.1"
-   id="svg2"
-   width="3840"
-   height="674"
-   viewBox="0 0 3840 674"
-   sodipodi:docname="pstg_logo_darkMode.eps"
-   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+<svg 
+width="10%" height="10%" viewBox="0 0 3840 674"
+xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns="http://www.w3.org/2000/svg"
-   xmlns:svg="http://www.w3.org/2000/svg">
-  <defs
-     id="defs6" />
-  <sodipodi:namedview
-     id="namedview4"
-     pagecolor="#ffffff"
-     bordercolor="#000000"
-     borderopacity="0.25"
-     inkscape:showpageshadow="2"
-     inkscape:pageopacity="0.0"
-     inkscape:pagecheckerboard="0"
-     inkscape:deskcolor="#d1d1d1" />
-  <g
-     id="g8"
-     inkscape:groupmode="layer"
-     inkscape:label="ink_ext_XXXXXX"
-     transform="matrix(1.3333333,0,0,-1.3333333,0,674)">
-    <g
-       id="g10"
-       transform="scale(0.1)">
+   xmlns:svg="http://www.w3.org/2000/svg"
+   >
+  <g transform="matrix(1.3333333,0,0,-1.3333333,0,674)">
+    <g id="g10" transform="scale(0.1)">
       <path
          d="m 3003.94,0 h -1241 C 1506.78,0 1268,137.809 1139.97,359.391 L 95.8281,2167.73 c -127.75,221.9 -127.75,497.45 -0.1211,719.11 L 1139.97,4695.26 c 127.91,221.9 366.7,359.72 622.97,359.72 h 2087.87 c 256.2,0 494.86,-137.82 623.02,-359.72 L 5517.84,2887.01 c 128.04,-221.66 128.04,-497.38 0,-719.28 l -269.99,-430.5 C 5122.12,1519.39 4883.34,1381.74 4627.07,1381.74 H 3384.36 l 679.35,1146.52 -628.38,1088.01 H 2178.21 L 1549.48,2527.45 3003.94,0 v 0"
          style="fill:#f0401e;fill-opacity:1;fill-rule:nonzero;stroke:none"
