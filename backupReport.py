@@ -402,16 +402,16 @@ def format_table(heading, headingStyle, htmlInput):
 
     if headingStyle == 1:
         headingHTML = heading.replace('<h1>',
-                                        '\n<h1 style="color: white; width: 100%; font-family: \'Inter\', \'San Francisco\', Helvetica, Arial, sans-serif; font-size: xx-large;">')
+                                        '\n<h1 style="color: white; width: 100%; font-family: \'Inter\', \'San Francisco\', Helvetica, Arial, sans-serif; font-size: x-large;">')
     elif headingStyle == 2:
         headingHTML = heading.replace('<h2>',
-                                        '\n<h2 style="color: white; width: 100%; font-family: \'Inter\', \'San Francisco\', Helvetica, Arial, sans-serif; font-size: x-large;">')
+                                        '\n<h2 style="color: white; width: 100%; font-family: \'Inter\', \'San Francisco\', Helvetica, Arial, sans-serif; font-size: larger;">')
     else:
         headingHTML = heading.replace('<h3>',
-                                        '\n<h3 style="color: white; width: 100%; font-family: \'Inter\', \'San Francisco\', Helvetica, Arial, sans-serif; font-weight: 300; font-size: larger; margin-top: -10px; padding-bottom: 10px;">')
+                                        '\n<h3 style="color: white; width: 100%; font-family: \'Inter\', \'San Francisco\', Helvetica, Arial, sans-serif; font-weight: 300; font-size: large; margin-top: -10px; padding-bottom: 10px;">')
 
     html = htmlInput.replace('<table border="1" class="dataframe">',
-                                '<table style="border-collapse: collapse; width: 100%; font-family: \'Inter\', \'San Francisco\', Helvetica, Arial, sans-serif; font-size: medium; table-layout: fixed;">')
+                                '<table style="border-collapse: collapse; width: 100%; font-family: \'Inter\', \'San Francisco\', Helvetica, Arial, sans-serif; font-size: medium; table-layout: auto;">')
     html = html.replace('<thead>',
                             '<thead style="color: white; border-bottom: 3px solid #FE5000;">')
     html = html.replace('<th>',
@@ -552,7 +552,7 @@ def main():
             insert_space_html()
             insert_divider_html()
             heading = f"Problem Report &mdash; {site}"
-            headingHTML = "<br /><h1 style=\"color: white; width: 100%; font-family: \'Inter\', \'San Francisco\', Helvetica, Arial, sans-serif; font-size: xx-large;\">" + heading + "</h1>"
+            headingHTML = "<br /><h1 style=\"color: white; width: 100%; font-family: \'Inter\', \'San Francisco\', Helvetica, Arial, sans-serif; font-size: larger;\">" + heading + "</h1>"
             html = ""
             write_html(headingHTML, html)
 
