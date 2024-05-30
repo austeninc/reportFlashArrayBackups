@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   version="1.1"
+   id="svg2"
+   width="960"
+   height="864.41333"
+   viewBox="0 0 960 864.41333"
+   sodipodi:docname="Pure Storage Bug Orange.eps"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs6" />
+  <sodipodi:namedview
+     id="namedview4"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1" />
+  <g
+     id="g8"
+     inkscape:groupmode="layer"
+     inkscape:label="ink_ext_XXXXXX"
+     transform="matrix(1.3333333,0,0,-1.3333333,0,864.41333)">
+    <g
+       id="g10"
+       transform="scale(0.1)">
+      <path
+         d="M 3852.7,0 H 2261.04 c -328.55,0 -634.8,176.75 -799,460.973 L 122.914,2780.13 c -163.8632,284.64 -163.8632,637.98 -0.141,922.28 l 1339.267,2319.3 c 164.07,284.64 470.31,461.38 799,461.38 h 2677.94 c 328.41,0 634.52,-176.74 798.93,-461.38 L 7076.9,3702.61 c 164.13,-284.29 164.13,-637.84 0,-922.48 L 6730.62,2228.16 C 6569.39,1948.72 6263.15,1772.12 5934.46,1772.12 H 4340.61 l 871.37,1470.5 -805.99,1395.29 H 2793.61 L 1987.27,3241.58 3852.7,0"
+         style="fill:#f0401e;fill-opacity:1;fill-rule:nonzero;stroke:none"
+         id="path12" />
+    </g>
+  </g>
+</svg>
