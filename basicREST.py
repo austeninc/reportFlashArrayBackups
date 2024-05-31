@@ -3,7 +3,7 @@ from purestorage import FlashArray
 
 import pandas as pd
 
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 
 import requests.packages.urllib3 # type: ignore
 requests.packages.urllib3.disable_warnings()
@@ -318,3 +318,13 @@ list_alerts(True)
 allAlerts = list_alerts()
 list_alertsReplication(allAlerts)
 list_alertsCritical(allAlerts)
+
+# Get the current date and time
+pacific = timezone(timedelta(hours=-7))
+now = datetime.now(pacific)
+
+# Print the current date and time
+print("Current date and time:", now)
+
+formatted_now = now.strftime("%Y-%m-%d %H:%M:%S")
+print("Formatted current date and time:", formatted_now, "Pacific (UTC-0700)")
