@@ -494,7 +494,7 @@ def end_html_body():
 #-------------------------------------------#
 
 def main():
-    configYAML = "config.yaml"
+    configYAML = "config.yml"
     yamlData = read_yaml(configYAML)
 
     siteSummary = pd.DataFrame({'site': list(yamlData['sites'].keys())})
