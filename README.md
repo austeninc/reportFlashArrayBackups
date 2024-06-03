@@ -5,7 +5,7 @@ Use the Pure Storage REST API via the Python client to collect information on ba
 ## THIS PROJECT IS INCOMPLETE
 ### Current Function:
 * Communicates with any number of arrays via REST across any number of sites
-** Requires completed YAML config file with Site & Arrays defined
+    * Requires completed YAML config file with Site & Arrays defined
 * Collects status information from each array, including:
     * Capacity data
     * Array Connections status & health
