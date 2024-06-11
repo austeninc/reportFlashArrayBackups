@@ -8,8 +8,23 @@ import pandas as pd
 import yaml
 import math
 
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+
 import requests.packages.urllib3  # type: ignore
 requests.packages.urllib3.disable_warnings()  # Ignore SSL errors due to self-signed certs on Pure appliances
+
+################################################
+##### UPDATE THESE FOR EMAIL FUNCTIONALITY #####
+################################################
+
+smtp_server = 'smtp.dev.purestorage.com'
+sender_email = "aclement@purestorage.com"
+receiver_email = "aclement@purestorage.com"
+
+################################################
+################################################
 
 # Set pandas display options to avoid scientific notation
 pd.set_option('display.float_format', '{:,.2f}'.format)
