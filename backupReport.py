@@ -508,6 +508,40 @@ def end_html_body():
 #          Done Writing HTML File           #
 #-------------------------------------------#
 
+#-------------------------------------------#
+#          Send Report via Email            #
+#-------------------------------------------#
+def email_prepare():
+    email_subject = f"FlashArray Backup Report - {reportTimeHuman} PT"
+    #print(email_subject)
+    #print(fileName)
+    with open(fileName, 'r', encoding='utf-8') as reportFile:
+        html_content = reportFile.read()
+    email_body = html_content
+    return email_subject, email_body
+
+def send_email(sender_email, receiver_email):
+    subject, body = email_prepare()
+
+    msg = MIMEMultipart('alternative')
+    msg['Subject'] = subject
+    msg['From'] = sender_email
+    msg['To'] = receiver_email
+
+    part = MIMEText(body, 'html')
+    msg.attach(part)
+
+    # Send via insecure SMTP server
+    try:
+        with smtplib.SMTP(smtp_server, 25) as server:
+            server.sendmail(sender_email, receiver_email, msg.as_string())
+        print("Email sent successfully!")
+    except Exception as e:
+        print(f"Failed to send email: {e}")
+#-------------------------------------------#
+#             Done with Email               #
+#-------------------------------------------#
+
 def main():
     configYAML = "config.yml"
     yamlData = read_yaml(configYAML)
@@ -619,6 +653,10 @@ def main():
 
     # Complete the HTML file
     end_html_body()
+
+    # Send via email
+    send_email(sender_email, receiver_email)
+
 
 if __name__ == "__main__":
     main()
