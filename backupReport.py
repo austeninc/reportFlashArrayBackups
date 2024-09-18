@@ -435,7 +435,7 @@ def format_table(heading, headingStyle, htmlInput):
 
     if headingStyle == 1:
         headingHTML = heading.replace('<h1>',
-                                        '\n<h1 style="color: white; width: 100%; font-family: \'Inter\', \'San Francisco\', Helvetica, Arial, sans-serif; font-size: x-large;">')
+                                        '\n<h1 style="color: white; width: 100%; font-family: \'Inter\', \'San Francisco\', Helvetica, Arial, sans-serif; font-size: 150%;">')
     elif headingStyle == 2:
         headingHTML = heading.replace('<h2>',
                                         '\n<h2 style="color: white; width: 100%; font-family: \'Inter\', \'San Francisco\', Helvetica, Arial, sans-serif; font-size: large;">')

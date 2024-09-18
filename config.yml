@@ -1,3 +1,23 @@
+# Configure arrays in this file.
+#
+# Example:
+#sites:
+  #SITE_NAME:
+    #- array: ARRAY_NAME
+       #mgmt_ip: MANAGEMENT_IP
+       #api_token: API_TOKEN
+    #- array: ARRAY_NAME
+       #mgmt_ip: MANAGEMENT_IP
+       #api_token: API_TOKEN
+  #SITE_NAME:
+    #- array: ARRAY_NAME
+       #mgmt_ip: MANAGEMENT_IP
+       #api_token: API_TOKEN
+  #SITE_NAME:
+    #- array: ARRAY_NAME
+       #mgmt_ip: MANAGEMENT_IP
+       #api_token: API_TOKEN
+#
 sites:
   SLC:
     - array: SLC-305-FA06
