@@ -37,6 +37,9 @@ sites:
       mgmt_ip: 10.235.116.227
       api_token: d7141d9c-dffc-6dae-7313-7d51030e26de
   San Jose:
+    - array: sjc-126-fa01
+      mgmt_ip: 10.210.108.185
+      api_token: 120ec9a5-a595-d529-d5b0-dd2bfc5852a9
     - array: sjc-127-fa01
       mgmt_ip: 10.210.108.103
       api_token: 84260e03-c7b9-98d9-54e8-73cb9dbd92a7

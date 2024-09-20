@@ -225,7 +225,7 @@ def update_activeCluster(arrays_df, activeCluster_df):
 
 def update_site_summary_status(site, summary_df, site_status_column, nested_status_column, nested_status_df):
     status = "Okay"
-    if (nested_status_df[nested_status_column] == "N/A").any():
+    if (nested_status_df[nested_status_column] == "N/A").all():
         status = "N/A"
     if (nested_status_df[nested_status_column] == "Warning").any():
         status = "Warning"
@@ -560,6 +560,9 @@ def main():
             'activeDR_status': activeDR_df,
             'activeCluster_status': activeCluster_df
         }
+        # if args.debug:
+        #     print("\nnested_site_dfs")
+        #     print(nested_site_dfs[site])
 
     for site, dfs in nested_site_dfs.items():
         update_capacity(dfs['arrays'], dfs['capacity'])
@@ -567,19 +570,15 @@ def main():
         update_activeDR(dfs['arrays'], dfs['activeDR_status'])
         update_activeCluster(dfs['arrays'], dfs['activeCluster_status'])
 
-        """ if args.debug:
-            print("\ncapacity (dfs['capacity']):")
-            print(dfs['capacity'])
-            print("\connections (dfs['connection_status']):")
-            print(dfs['connection_status'])
-            print("\activeDR (siteSummary - dfs['activeDR_status']):")
-            print(dfs['activeDR_status'])
-            print("\nactiveCluster (siteSummary - dfs['activeCluster_status']):")
-            print(dfs['activeCluster_status']) """
-
-    if args.debug:
-        print("\nSummary (siteSummary - BEFORE UPDATE):")
-        print(siteSummary)
+        # if args.debug:
+        #     print("\ncapacity (dfs['capacity']):")
+        #     print(dfs['capacity'])
+        #     print("\connections (dfs['connection_status']):")
+        #     print(dfs['connection_status'])
+        #     print("\activeDR (siteSummary - dfs['activeDR_status']):")
+        #     print(dfs['activeDR_status'])
+        #     print("\nactiveCluster (siteSummary - dfs['activeCluster_status']):")
+        #     print(dfs['activeCluster_status'])
 
     for site, dfs in nested_site_dfs.items():
         siteConnectionStatus = update_site_summary_status(site, siteSummary, 'site_connections_status', 'connection_status', dfs['connection_status'])
