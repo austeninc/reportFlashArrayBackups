@@ -2,6 +2,7 @@ import purestorage
 from purestorage import FlashArray
 
 import os
+import argparse
 import datetime
 from datetime import datetime, timezone, timedelta
 
@@ -30,9 +31,18 @@ receiver_email = "aclement@purestorage.com"
 # Set pandas display options to avoid scientific notation
 pd.set_option('display.float_format', '{:,.2f}'.format)
 
+# Define arguments
+def arguments():
+    parser = argparse.ArgumentParser(description="An UNOFFICIAL tool using the Pure Storage REST API to collect information on FlashArray replication health and email the results in a report. See GitHub (https://github.com/austeninc/reportFlashArrayBackups) for more information.")
+
+    #parser.add_argument('-l', '--light-mode', action='store_true', help="Enable light theme (default is dark)")
+    #parser.add_argument('-v', '--verbose', action='store_true', help="Increase report detail. Always show all replication health, even if all links are healthy")
+    parser.add_argument('-d', '--debug', action='store_true', help='Output debug data to terminal')
+
+    return parser
+
 # Get time of report generation
 def report_time():
-    # Get the current date and time
     pacific = timezone(timedelta(hours=-7))
     now = datetime.now(pacific)
     reportTimeHuman = now.strftime("%Y-%m-%d %H:%M:%S")
@@ -215,10 +225,13 @@ def update_activeCluster(arrays_df, activeCluster_df):
 
 def update_site_summary_status(site, summary_df, site_status_column, nested_status_column, nested_status_df):
     status = "Okay"
+    if (nested_status_df[nested_status_column] == "N/A").any():
+        status = "N/A"
     if (nested_status_df[nested_status_column] == "Warning").any():
         status = "Warning"
     summary_df.loc[summary_df['site'] == site, site_status_column] = status
     return status
+
 def remove_null_rows(nested_data_column, nested_df):
     # drop all rows that contain 'N/A'
     nested_clean_df = nested_df.drop(nested_df[nested_df[nested_data_column] == 'N/A'].index)
@@ -520,6 +533,14 @@ def clean_up():
 #-------------------------------------------#
 
 def main():
+
+    # Initialize parser and parse arguments
+    parser = arguments()
+    args = parser.parse_args()
+
+    if args.debug:
+        print("\nDebug mode is enabled.")
+
     configYAML = "config.yml"
     yamlData = read_yaml(configYAML)
 
@@ -546,14 +567,28 @@ def main():
         update_activeDR(dfs['arrays'], dfs['activeDR_status'])
         update_activeCluster(dfs['arrays'], dfs['activeCluster_status'])
 
-    siteSummary['site_connections_status'] = "N/A"
-    siteSummary['site_activeDR_status'] = "N/A"
-    siteSummary['site_activeCluster_status'] = "N/A"
+        """ if args.debug:
+            print("\ncapacity (dfs['capacity']):")
+            print(dfs['capacity'])
+            print("\connections (dfs['connection_status']):")
+            print(dfs['connection_status'])
+            print("\activeDR (siteSummary - dfs['activeDR_status']):")
+            print(dfs['activeDR_status'])
+            print("\nactiveCluster (siteSummary - dfs['activeCluster_status']):")
+            print(dfs['activeCluster_status']) """
+
+    if args.debug:
+        print("\nSummary (siteSummary - BEFORE UPDATE):")
+        print(siteSummary)
 
     for site, dfs in nested_site_dfs.items():
         siteConnectionStatus = update_site_summary_status(site, siteSummary, 'site_connections_status', 'connection_status', dfs['connection_status'])
         siteActiveDRStatus = update_site_summary_status(site, siteSummary, 'site_activeDR_status', 'activeDR_status', dfs['activeDR_status'])
         siteActiveClusterStatus = update_site_summary_status(site, siteSummary, 'site_activeCluster_status', 'activeCluster_status',dfs['activeCluster_status'])
+
+    if args.debug:
+        print("\nSummary (siteSummary - AFTER UPDATE):")
+        print(siteSummary)
 
     # Initialize HTML file
     start_html_body()
@@ -561,8 +596,9 @@ def main():
     # Output Summary
     siteSummary_copy = siteSummary.copy()
     siteSummary_copy = format_dataframe('summary', siteSummary_copy)
-    #print("Summary:")
-    #print(siteSummary_copy)
+    if args.debug:
+        print("\nSummary (siteSummary_copy - formatted):")
+        print(siteSummary_copy)
 
     heading = "Summary"
     make_html(heading, 1, siteSummary_copy)

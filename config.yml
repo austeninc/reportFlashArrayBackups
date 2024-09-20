@@ -19,6 +19,10 @@
        #api_token: API_TOKEN
 #
 sites:
+  SLC No Backups:
+    - array: SLC-507-FA04
+      mgmt_ip: 10.235.118.24
+      api_token: 598af8cb-db47-4076-8509-9d1256d1df77
   SLC:
     - array: SLC-305-FA06
       mgmt_ip: 10.235.116.230
