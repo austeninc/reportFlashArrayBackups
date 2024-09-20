@@ -96,7 +96,7 @@ sites:
       api_token: API_TOKEN
 ```
 
-# v1.1 Notes
+# v1.2 Notes
 
 ### Pending Development:
 
